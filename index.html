@@ -855,6 +855,7 @@ document.addEventListener('DOMContentLoaded', function(){
       localStorage.setItem(LS_SES,JSON.stringify({session:r.session,username:u,role:r.role,nama:r.nama}));
       ov.style.display='none';showApp();showUserMeta();toast('Selamat datang '+esc(r.nama||u));
       syncFromBackend().then(render);
+      updateToolbarRole(); // tampilkan/sembunyikan tab Pengguna sesuai role
     }catch(e){document.getElementById('luError').textContent='Gagal terhubung backend (API_BASE belum diset?)'}
   }
   function logout(){
@@ -877,7 +878,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(r.ok&&r.user&&r.user.username===sess.username){
         state.session=sess.session;state.role=r.user.role;state.nama=r.user.nama;
         ov.style.display='none';showApp();showUserMeta();
-        syncFromBackend().then(render);
+        updateToolbarRole();syncFromBackend().then(render);
       } else { showLogin(); }
     }).catch(()=>{ showLogin(); });
   } else {
@@ -889,7 +890,7 @@ document.addEventListener('DOMContentLoaded', function(){
   luSkip.addEventListener('click',e=>{
     e.preventDefault();localStorage.removeItem(LS_SES);
     state={...state,session:null,role:'viewer',nama:'Tamu'};
-    ov.style.display='none';showApp();showUserMeta();toast('Mode tamu (offline)');
+    ov.style.display='none';showApp();showUserMeta();updateToolbarRole();toast('Mode tamu (offline)');
   });
 });
 
