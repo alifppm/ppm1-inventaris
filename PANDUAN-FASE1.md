@@ -113,12 +113,41 @@ Konten laporan:
 | **Booking mana yang paling besar?** | Laporan mingguan → "5 Booking Terbesar" |
 | **Item mana yang sedang rusak/hilang?** | Laporan mingguan → card "Item Rusak / Hilang / Dalam Perbaikan" |
 
-## Rekomendasi Langkah Berikutnya
+## ✅ Fase 2 — Login & Role-Based Access
 
-**Pilih salah satu:**
+### Cara Setup Backend (10-15 menit)
+1. Buka `backend/SETUP.md` di repo → ikuti step-by-step.
+2. Paste `backend/backend.gs` ke Apps Script editor.
+3. Jalankan `setup()` → sheet otomatis dibuat + user `admin` dibuat.
+4. Deploy sebagai **Web App** → salin URL (`https://script.google.com/macros/s/XXXXX/exec`).
+5. Buka `index.html` → ganti `API_BASE` dengan URL Web App Anda.
+6. Push → website sekarang butuh login.
 
-1. **Uji coba 1 minggu dulu** — pakai, upload foto, buat 2-3 booking, cek laporan. Jika ada yang kurang/salah, kita revisi cepat.
-2. **Langsung upgrade ke Fase 2 (Apps Script backend)** — semua tim satu sumber data real-time, tetap gratis. Data tetap bisa ditarik ke Google Sheet Anda.
-3. **Tambah fitur spesifik lagi** — mis. integrasi WhatsApp (kirim reminder otomatis), atau dashboard omzet bulanan di Google Sheet.
+### Default Login
+- Username: `admin`
+- Password: `AdminPPM1@2026` ← **GANTI SETELAH DEPLOY!**
 
-Mau yang mana?
+### Hak Akses (Role-Based)
+| Aksi | admin | editor | viewer |
+|---|---|---|---|
+| Lihat item & booking | ✅ | ✅ | ✅ |
+| Cek stok / laporan | ✅ | ✅ | ✅ |
+| Tambah / edit / hapus item | ✅ | ✅ | ❌ |
+| Tambah / tutup / hapus booking | ✅ | ✅ | ❌ |
+| Kelola label kategori/kondisi | ✅ | ❌ | ❌ |
+| Impor / export JSON | ✅ | ✅ | ✅ |
+| Kelola user (tambah/ganti password) | ✅ | ❌ | ❌ |
+| Reset ke seed | ✅ | ❌ | ❌ |
+| Lihat log aktivitas | ✅ | ✅ | ✅ |
+
+### Cara Tambah User Tim
+1. Login sebagai `admin`.
+2. Di tab Log → panel **Kelola User** → form Tambah User.
+3. Isi username, password, role, nama.
+4. User baru bisa login dengan username & password tersebut.
+
+### Keamanan
+- Password di-hash SHA-256 + salt — tidak disimpan plaintext.
+- Session token (UUID, 7 hari) — tidak perlu login ulang tiap buka.
+- Role check di server — `viewer` tidak bisa tambah item, `editor` tidak bisa kelola user.
+- Audit log — semua aksi tercatat di `activity_log` dengan userId.
