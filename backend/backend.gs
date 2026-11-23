@@ -68,8 +68,16 @@ function setup() {
       CONFIG.DEFAULT_ADMIN, hash, salt, 'admin', 'Admin PPM1', new Date().toISOString()
     ]]);
   }
-  log('setup', 'Backend di-setup, admin pertama: ' + CONFIG.DEFAULT_ADMIN, 'system');
+  logSafe('setup', 'Backend di-setup, admin pertama: ' + CONFIG.DEFAULT_ADMIN, 'system');
   SpreadsheetApp.flush();
+}
+
+function logSafe(type, detail, userId) {
+  try {
+    log(type, detail, userId);
+  } catch (e) {
+    // Log sheet belum siap — abaikan, jangan crash
+  }
 }
 
 // ============================================================
@@ -326,16 +334,21 @@ function removeUser(username, byUserId) {
 // LOG
 // ============================================================
 function log(type, detail, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sh = ss.getSheetByName(SHEET.LOG);
-  if (!sh) return;
-  sh.append([new Date().toISOString(), type, detail, userId || 'system']);
-  // Truncate: jaga cap 500 baris
-  const lastRow = sh.getLastRow();
-  if (lastRow > CONFIG.LOG_CAP + 1) {
-    sh.deleteRows(lastRow - CONFIG.LOG_CAP + 1, lastRow - (CONFIG.LOG_CAP + 1));
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName(SHEET.LOG);
+    if (!sh) return;
+    sh.getRange(sh.getLastRow() + 1, 1, 1, 4).setValues([[
+      new Date().toISOString(), type, detail, userId || 'system'
+    ]]);
+    // Truncate: jaga cap 500 baris
+    const lastRow = sh.getLastRow();
+    if (lastRow > CONFIG.LOG_CAP + 1) {
+      sh.deleteRows(CONFIG.LOG_CAP + 2, lastRow - (CONFIG.LOG_CAP + 1));
+    }
+  } catch (e) {
+    // Jangan crash — log adalah best-effort
   }
-  SpreadsheetApp.flush();
 }
 
 function listLog(types, userId) {
