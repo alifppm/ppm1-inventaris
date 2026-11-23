@@ -12,7 +12,7 @@
 // ============================================================
 
 // === Nama sheet ===
-const SHEET = {
+var SHEET = {
   ITEMS: 'items',
   BOOKINGS: 'bookings',
   USERS: 'users',
@@ -22,7 +22,7 @@ const SHEET = {
 };
 
 // === Config ===
-const CONFIG = {
+var CONFIG = {
   SESSION_DAYS: 7,
   LOG_CAP: 500,
   DEFAULT_ADMIN: 'admin',
@@ -377,7 +377,7 @@ function listLog(types) {
   if (!sh || sh.getLastRow() < 2) return [];
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues();
   return rows.filter(function(r) { return !types || types.length === 0 || types.indexOf(r[1]) >= 0; })
-             .map(function(r) { return { t: r[0], type: r[1], detail: r[2], userId: r[3]; } })
+             .map(function(r) { return { t: r[0], type: r[1], detail: r[2], userId: r[3] }; })
              .reverse().slice(0, 100);
 }
 
