@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPM1 — Inventaris Barang</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--accent:#f59e0b;--ok:#22c55e;--warn:#ef4444;--border:#334155}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:#1e3a8a;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+header h1{margin:0;font-size:1.25rem}
+header .meta{font-size:.8rem;color:#cbd5e1}
+.toolbar{display:flex;gap:.5rem;padding:1rem 1.5rem;flex-wrap:wrap;align-items:center}
+.toolbar input,.toolbar select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.55rem .75rem;border-radius:8px;font-size:.9rem;min-width:150px}
+.toolbar input[type=search]{flex:1;min-width:200px}
+button{background:var(--accent);color:#0f172a;border:0;padding:.55rem .9rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem}
+button:hover{filter:brightness(1.1)}
+button.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+button.danger{background:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;padding:0 1.5rem 1rem}
+.stat{background:var(--card);border-radius:10px;padding:1rem;text-align:center}
+.stat .num{font-size:1.8rem;font-weight:700;color:var(--accent)}
+.stat .lbl{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse;background:var(--card);margin:0 1.5rem 1rem;border-radius:10px;overflow:hidden}
+th,td{padding:.75rem .9rem;text-align:left;border-bottom:1px solid var(--border);font-size:.88rem}
+th{background:#0b1224;cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--accent)}
+th .arr{opacity:.4;font-size:.7rem;margin-left:.25rem}
+tr:hover td{background:#243247}
+.pill{display:inline-block;padding:.15rem .55rem;border-radius:99px;font-size:.75rem;font-weight:600}
+.pill.ok{background:#14532d;color:#86efac}
+.pill.warn{background:#450a0a;color:#fca5a5}
+.img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#0f172a}
+.img-placeholder{width:56px;height:56px;border-radius:8px;background:#334155;display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--muted)}
+.actions button{margin-right:.3rem;padding:.35rem .55rem;font-size:.75rem}
+.form-section{background:var(--card);margin:0 1.5rem 1rem;padding:1rem;border-radius:10px;display:none}
+.form-section.active{display:block}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem}
+.form-grid label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:.3rem}
+.form-grid input,.form-grid select,.form-grid textarea{width:100%;background:#0f172a;border:1px solid var(--border);color:var(--text);padding:.55rem;border-radius:6px;font-size:.9rem}
+.form-actions{margin-top:.75rem;display:flex;gap:.5rem;justify-content:flex-end}
+.toast{position:fixed;bottom:1rem;right:1rem;background:#166534;color:#fff;padding:.8rem 1.2rem;border-radius:8px;display:none;z-index:99;max-width:320px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.toast.show{display:block}
+.toast.error{background:#7f1d1d}
+footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)}
+.search-count{color:var(--muted);font-size:.85rem;margin-left:auto}
+@media(max-width:600px){.toolbar{padding:1rem}.stats{padding:0 1rem 1rem}.form-section{margin:0 1rem 1rem}th,td{padding:.55rem;font-size:.8rem}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📦 PPM1 — Inventaris Barang</h1>
+  <div class="meta">Putri Pinang Masak 1 • <span id="ts">-</span></div>
+</header>
+
+<div class="toolbar">
+  <input type="search" id="q" placeholder="Cari nama barang / id / kategori…">
+  <select id="fKategori"><option value="">Semua Kategori</option></select>
+  <select id="fKondisi">
+    <option value="">Semua Kondisi</option>
+    <option>BAIK</option><option>RUSAK</option><option>PERBAIKAN</option>
+  </select>
+  <button id="btnAdd" style="margin-left:auto">＋ Tambah Item</button>
+  <button class="ghost" id="btnImport">Impor JSON</button>
+  <button class="ghost" id="btnExport">Export JSON</button>
+  <button class="ghost" id="btnReset">Reset dari Seed</button>
+  <input type="file" id="fileImport" accept=".json" style="display:none">
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">Total Item</div></div>
+  <div class="stat"><div class="num" id="stQty">0</div><div class="lbl">Total Qty</div></div>
+  <div class="stat"><div class="num" id="stKategori">0</div><div class="lbl">Kategori</div></div>
+  <div class="stat"><div class="num" id="stRusak">0</div><div class="lbl">Kondisi Rusak</div></div>
+</div>
+
+<table id="tbl">
+  <thead>
+    <tr>
+      <th data-k="foto">Foto<span class="arr">↕</span></th>
+      <th data-k="id">ID<span class="arr">↕</span></th>
+      <th data-k="nama">Nama Barang<span class="arr">↕</span></th>
+      <th data-k="kategori">Kategori<span class="arr">↕</span></th>
+      <th data-k="kondisi">Kondisi<span class="arr">↕</span></th>
+      <th data-k="qty">Qty<span class="arr">↕</span></th>
+      <th>Aksi</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div class="form-section" id="formSec">
+  <h3 id="formTitle">Tambah Item Baru</h3>
+  <div class="form-grid">
+    <div><label>Nama Barang *</label><input id="fNama" placeholder="Gaun Pengantin Wanita (Merah)"></div>
+    <div><label>ID (hex 8 digit, kosong = auto)</label><input id="fId" placeholder="mis. a1b2c3d4"></div>
+    <div><label>Kategori *</label><input id="fKategori" list="dlKategori" placeholder="UMUM"><datalist id="dlKategori"></datalist></div>
+    <div><label>Foto (path / URL)</label><input id="fFoto" placeholder="Master Barang_Images/xxx.jpg"></div>
+    <div><label>Kondisi *</label><select id="fKondisi"><option>BAIK</option><option>RUSAK</option><option>PERBAIKAN</option></select></div>
+    <div><label>Qty *</label><input id="fQty" type="number" min="0" value="1"></div>
+  </div>
+  <div class="form-actions">
+    <button class="ghost" id="btnCancelForm">Batal</button>
+    <button id="btnSave">Simpan</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer>Semua data tersimpan di browser (localStorage) • Gratis, tanpa server • <a href="#" id="btnSeedReload" style="color:var(--accent)">Muat ulang data-seed.json</a></footer>
+
+<script>
+const LS_KEY = 'ppm1_inventory_v1';
+let state = { items: [], sort: {k:'nama', dir:1}, filter: {q:'', kat:'', kon:''}, editingId: null };
+
+function uid(){ return Array.from({length:8},()=> '0123456789abcdef'[Math.floor(Math.random()*16)]).join(''); }
+
+async function loadSeed(){
+  try{
+    const r = await fetch('data-seed.json');
+    if(!r.ok) throw new Error(r.status);
+    const arr = await r.json();
+    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    return arr;
+  }catch(e){ console.warn('seed gagal:', e); return []; }
+}
+function loadLS(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
+function saveLS(){ localStorage.setItem(LS_KEY, JSON.stringify(state.items)); }
+
+function toast(msg, err){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (err?' error':'');
+  setTimeout(()=> t.className='toast', 3000);
+}
+
+function renderKategoriDl(){
+  const set = new Set(state.items.map(i=>i.kategori).filter(Boolean));
+  document.getElementById('dlKategori').innerHTML = [...set].map(k=>`<option value="${k}">`).join('');
+  const sel = document.getElementById('fKategori');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Semua Kategori</option>' + [...set].sort().map(k=>`<option>${k}</option>`).join('');
+  sel.value = prev;
+}
+
+function render(){
+  // stats
+  document.getElementById('stTotal').textContent = state.items.length;
+  document.getElementById('stQty').textContent = state.items.reduce((s,i)=>s+(+i.qty||0),0);
+  document.getElementById('stKategori').textContent = new Set(state.items.map(i=>i.kategori)).size;
+  document.getElementById('stRusak').textContent = state.items.filter(i=>i.kondisi==='RUSAK').length;
+
+  renderKategoriDl();
+
+  // filter
+  const q = state.filter.q.toLowerCase();
+  let rows = state.items.filter(i=>{
+    if(q && !(i.nama||'').toLowerCase().includes(q) && !(i.id||'').toLowerCase().includes(q) && !(i.kategori||'').toLowerCase().includes(q)) return false;
+    if(state.filter.kat && i.kategori !== state.filter.kat) return false;
+    if(state.filter.kon && i.kondisi !== state.filter.kon) return false;
+    return true;
+  });
+
+  // sort
+  rows.sort((a,b)=>{
+    const va=a[state.sort.k], vb=b[state.sort.k];
+    if(va==vb) return 0;
+    if(va==null) return 1; if(vb==null) return -1;
+    return (typeof va==='number'? va-vb : String(va).localeCompare(String(vb))) * state.sort.dir;
+  });
+
+  document.getElementById('tbody').innerHTML = rows.map(i=>`
+    <tr>
+      <td>${i.foto?`<img class="img" src="${i.foto}" onerror="this.outerHTML='<div class=img-placeholder>📷</div>'" alt="">`:'<div class="img-placeholder">📷</div>'}</td>
+      <td style="font-family:monospace;color:var(--muted)">${i.id||'-'}</td>
+      <td>${i.nama||''}</td>
+      <td>${i.kategori||''}</td>
+      <td>${i.kondisi?`<span class="pill ${i.kondisi==='BAIK'?'ok':'warn'}">${i.kondisi}</span>`:'<span class="pill">-</span>'}</td>
+      <td>${i.qty??0}</td>
+      <td class="actions">
+        <button onclick="editItem('${i.id}')">✎</button>
+        <button class="danger" onclick="delItem('${i.id}')">✕</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Belum ada item. Klik "＋ Tambah Item" atau "Impor JSON".</td></tr>';
+
+  document.getElementById('ts').textContent = new Date().toLocaleString('id-ID');
+}
+
+function editItem(id){
+  const it = state.items.find(x=>x.id===id); if(!it) return;
+  state.editingId = id;
+  document.getElementById('formTitle').textContent = 'Edit Item: '+it.nama;
+  document.getElementById('fNama').value = it.nama||'';
+  document.getElementById('fId').value = it.id||'';
+  document.getElementById('fKategori').value = it.kategori||'';
+  document.getElementById('fFoto').value = it.foto||'';
+  document.getElementById('fKondisi').value = it.kondisi||'BAIK';
+  document.getElementById('fQty').value = it.qty??1;
+  document.getElementById('formSec').classList.add('active');
+  document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
+}
+window.editItem = editItem;
+
+function delItem(id){
+  const it = state.items.find(x=>x.id===id);
+  if(!confirm(`Hapus "${it?.nama}"?`)) return;
+  state.items = state.items.filter(x=>x.id!==id);
+  saveLS(); render(); toast('Item dihapus');
+}
+window.delItem = delItem;
+
+async function init(){
+  // 1. load seed
+  const seed = await loadSeed();
+  if(seed.length){ state.items = seed; saveLS(); }
+  else { state.items = loadLS(); }
+  document.getElementById('fId').placeholder = 'otomatis jika kosong';
+
+  // 2. events
+  document.getElementById('q').addEventListener('input', e=>{ state.filter.q=e.target.value; render(); });
+  document.getElementById('fKategori').addEventListener('change', e=>{ state.filter.kat=e.target.value; render(); });
+  document.getElementById('fKondisi').addEventListener('change', e=>{ state.filter.kon=e.target.value; render(); });
+
+  document.querySelectorAll('th[data-k]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const k = th.dataset.k;
+      if(state.sort.k===k) state.sort.dir*=-1; else { state.sort.k=k; state.sort.dir=1; }
+      document.querySelectorAll('th .arr').forEach(a=>a.textContent='↕');
+      th.querySelector('.arr').textContent = state.sort.dir===1?'↑':'↓';
+      render();
+    });
+  });
+
+  document.getElementById('btnAdd').addEventListener('click',()=>{
+    state.editingId = null;
+    document.getElementById('formTitle').textContent = 'Tambah Item Baru';
+    ['fNama','fId','fKategori','fFoto'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fKondisi').value='BAIK';
+    document.getElementById('fQty').value='1';
+    document.getElementById('formSec').classList.add('active');
+    document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
+  });
+
+  document.getElementById('btnCancelForm').addEventListener('click',()=>{
+    document.getElementById('formSec').classList.remove('active');
+  });
+
+  document.getElementById('btnSave').addEventListener('click',()=>{
+    const nama = document.getElementById('fNama').value.trim();
+    const id = document.getElementById('fId').value.trim() || uid();
+    const kategori = document.getElementById('fKategori').value.trim() || 'UMUM';
+    const foto = document.getElementById('fFoto').value.trim();
+    const kondisi = document.getElementById('fKondisi').value;
+    const qty = Math.max(0, +document.getElementById('fQty').value||0);
+    if(!nama){ toast('Nama barang wajib diisi', true); return; }
+    if(state.editingId){
+      const idx = state.items.findIndex(x=>x.id===state.editingId);
+      state.items[idx] = {...state.items[idx], nama, id, kategori, foto, kondisi, qty};
+      toast('Perubahan disimpan');
+    }else{
+      state.items.push({id, nama, kategori, foto, kondisi, qty});
+      toast('Item ditambahkan');
+    }
+    saveLS(); render(); document.getElementById('formSec').classList.remove('active');
+  });
+
+  document.getElementById('btnExport').addEventListener('click',()=>{
+    const blob = new Blob([JSON.stringify(state.items,null,2)],{type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `ppm1-inventaris-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  });
+
+  document.getElementById('btnImport').addEventListener('click',()=>document.getElementById('fileImport').click());
+  document.getElementById('fileImport').addEventListener('change', async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      const arr = JSON.parse(await f.text());
+      if(!Array.isArray(arr)) throw new Error('bukan array');
+      if(!confirm(`Impor ${arr.length} item? Data saat ini (${state.items.length}) akan diganti.`)) return;
+      state.items = arr; saveLS(); render(); toast('Impor berhasil: '+arr.length+' item');
+    }catch(err){ toast('File tidak valid: '+err.message, true); }
+  });
+
+  document.getElementById('btnReset').addEventListener('click',async()=>{
+    if(!confirm('Kembali ke data seed? Perubahan lokal akan dihapus.')) return;
+    const seed = await loadSeed();
+    if(seed.length){ state.items = seed; saveLS(); render(); toast('Reset ke seed: '+seed.length+' item'); }
+    else toast('Seed tidak ditemukan / gagal dimuat', true);
+  });
+
+  document.getElementById('btnSeedReload').addEventListener('click', async e=>{
+    e.preventDefault();
+    const seed = await loadSeed();
+    if(seed.length){ state.items = seed; saveLS(); render(); toast('Seed dimuat ulang'); }
+    else toast('Seed gagal dimuat', true);
+  });
+
+  render();
+}
+init();
+</script>
+</body>
+</html>

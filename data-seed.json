@@ -1,0 +1,410 @@
+[
+  {
+    "id": "7ee98f44",
+    "nama": "Kris alesan gede",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/7ee98f44.Foto Barang.080824.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "05d00cd2",
+    "nama": "Kebaya dinda",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/05d00cd2.Foto Barang.082304.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "e6a89f7f",
+    "nama": "Kebaya tiara",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/e6a89f7f.Foto Barang.082425.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "ef9fb693",
+    "nama": "Kabaya imel",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/ef9fb693.Foto Barang.082551.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "700d28e0",
+    "nama": "Kebaya anggi",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/700d28e0.Foto Barang.082710.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "98d56c45",
+    "nama": "Kebaya ismi",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/98d56c45.Foto Barang.083134.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "dd9cf98a",
+    "nama": "Kebaya Nabila",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/dd9cf98a.Foto Barang.083632.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "033a2b8b",
+    "nama": "Kebaya bella",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/033a2b8b.Foto Barang.084432.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "85baf160",
+    "nama": "Tanjak Rumpak Bapak (Navy gold)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/85baf160.Foto Barang.075229.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "88bc4e43",
+    "nama": "Tanjak Rumpak Keluarga (Merah cabe)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/88bc4e43.Foto Barang.075326.jpg",
+    "kondisi": "BAIK",
+    "qty": 10
+  },
+  {
+    "id": "fb44b852",
+    "nama": "Tanjak Rumpak Bapak (Biru ibu mey)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/fb44b852.Foto Barang.075404.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "64187610",
+    "nama": "Tanjak Rumpak Bapak (Ijo Botol)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/64187610.Foto Barang.075427.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "3d27cd66",
+    "nama": "Tanjak Rumpak Bapak (Silver)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/3d27cd66.Foto Barang.075503.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "ac186b10",
+    "nama": "Tanjak Rumpak Bapak (Merah Ibu Sri)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/ac186b10.Foto Barang.075555.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "fd5bd771",
+    "nama": "Tanjak Rumpak Keluarga (Cream Gold)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/fd5bd771.Foto Barang.075626.jpg",
+    "kondisi": "BAIK",
+    "qty": 10
+  },
+  {
+    "id": "aa5b172e",
+    "nama": "Tanjak Rumpak Bapak (Maron Kristal)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/aa5b172e.Foto Barang.075729.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "07130b5c",
+    "nama": "Tanjak Rumpak Bapak (Merah Bintang Tabur)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/07130b5c.Foto Barang.075759.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "94376351",
+    "nama": "Tanjak Rumpak Bapak (Biru Silver)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/94376351.Foto Barang.075854.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "abef04fc",
+    "nama": "Tanjak Rumpak Bapak (Merah Ibu Mey)",
+    "kategori": "TANJAK RUMPAK",
+    "foto": "Master Barang_Images/abef04fc.Foto Barang.075926.jpg",
+    "kondisi": "BAIK",
+    "qty": 2
+  },
+  {
+    "id": "8228b8dc",
+    "nama": "Rumpak Tanjak Pengantin (lylac)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/8228b8dc.Foto Barang.061223.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "1654e97a",
+    "nama": "Rumpak Tanjak Pengantin (putih silver)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/1654e97a.Foto Barang.061336.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "37802d2d",
+    "nama": "Rumpak Tanjak Pengantin (Biru Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/37802d2d.Foto Barang.061406.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "4f148d73",
+    "nama": "Rumpak Tanjak Pengantin (Biru Silver)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/4f148d73.Foto Barang.061448.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "7b6f36c5",
+    "nama": "Rumpak Tanjak Pengantin (Biru Denim)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/7b6f36c5.Foto Barang.061537.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "f37baee8",
+    "nama": "Rumpak Tanjak Pengantin (Sage Silver)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/f37baee8.Foto Barang.061625.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "7a736657",
+    "nama": "Rumpak Tanjak Pengantin (Sage Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/7a736657.Foto Barang.061710.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "817c2729",
+    "nama": "Rumpak Tanjak Pengantin (Ijo Botol)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/817c2729.Foto Barang.061800.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "4e41a9ba",
+    "nama": "Rumpak Tanjak Pengantin (Ijo Botol Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/4e41a9ba.Foto Barang.071615.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "bdf5b4dd",
+    "nama": "Rumpak Tanjak Pengantin ( Salem Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/bdf5b4dd.Foto Barang.071702.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "2b7a4aef",
+    "nama": "Rumpak Tanjak Pengantin (Terakota Gelap)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/2b7a4aef.Foto Barang.071821.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "ab583ef7",
+    "nama": "Rumpak Tanjak Pengantin (Terakota Terang)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/ab583ef7.Foto Barang.071855.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "1d7a5280",
+    "nama": "Rumpak Tanjak Pengantin ( Coklat Gold )",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/1d7a5280.Foto Barang.072001.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "7a52a9a8",
+    "nama": "Rumpak Tanjak Pengantin (Cream Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/7a52a9a8.Foto Barang.072045.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "fe2e37bd",
+    "nama": "Rumpak Tanjak Pengantin ( Burgundy)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/fe2e37bd.Foto Barang.072127.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "eac5422d",
+    "nama": "Rumpak Tanjak Pengantin (Maroon)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/eac5422d.Foto Barang.072323.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "33502704",
+    "nama": "Rumpak Tanjak Pengantin (Maroon Nampan Perak)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/33502704.Foto Barang.072509.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "54aa6b47",
+    "nama": "Songket Selendang Keluarga (A1)",
+    "kategori": "SONGKET SELENDANG",
+    "foto": "Master Barang_Images/54aa6b47.Foto Barang.024355.jpg",
+    "kondisi": "BAIK",
+    "qty": 10
+  },
+  {
+    "id": "c463a385",
+    "nama": "Songket Selendang Keluarga (Cream Gold)",
+    "kategori": "SONGKET SELENDANG",
+    "foto": "Master Barang_Images/c463a385.Foto Barang.024438.jpg",
+    "kondisi": "BAIK",
+    "qty": 10
+  },
+  {
+    "id": "3a415ba7",
+    "nama": "Songket Selendang Keluarga (Biru Gold)",
+    "kategori": "SONGKET SELENDANG",
+    "foto": "Master Barang_Images/3a415ba7.Foto Barang.024510.jpg",
+    "kondisi": "BAIK",
+    "qty": 10
+  },
+  {
+    "id": "4d951165",
+    "nama": "Songket Pengantin Wanita (Ijo Botol Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/4d951165.Foto Barang.024611.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "d2854422",
+    "nama": "Songket Pengantin Wanita (Ijo Botol)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/d2854422.Foto Barang.024653.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "e00d9390",
+    "nama": "Songket Pengantin Wanita (Sage Silver) mm",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/e00d9390.Foto Barang.024750.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "c166a3f7",
+    "nama": "Songket Pengantin Wanita (Sage Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/c166a3f7.Foto Barang.024839.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "75246335",
+    "nama": "Songket Pengantin Wanita (Putih Gold1)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/75246335.Foto Barang.024941.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "3577638c",
+    "nama": "Songket Pengantin Wanita (Putih Gold2)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/3577638c.Foto Barang.025115.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "f7f1010b",
+    "nama": "Songket Pengantin Wanita (Putih Silver)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/f7f1010b.Foto Barang.025146.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "9b88934a",
+    "nama": "Songket Pengantin Wanita (lylac)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/9b88934a.Foto Barang.025249.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "855d11a1",
+    "nama": "Songket Pengantin Wanita (Biru Silver)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/855d11a1.Foto Barang.025343.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "02a55831",
+    "nama": "Songket Pengantin Wanita (BiruGold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/02a55831.Foto Barang.025412.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "a67b7a36",
+    "nama": "Songket Pengantin Wanita (Denim Gold)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/a67b7a36.Foto Barang.025445.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  },
+  {
+    "id": "0f75ea39",
+    "nama": "Songket Pengantin Wanita (Salem)",
+    "kategori": "UMUM",
+    "foto": "Master Barang_Images/0f75ea39.Foto Barang.025517.jpg",
+    "kondisi": "BAIK",
+    "qty": 1
+  }
+]
