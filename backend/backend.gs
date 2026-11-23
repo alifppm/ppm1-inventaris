@@ -474,3 +474,26 @@ function doPost(e) {
     return json({ ok: false, error: String(err) });
   }
 }
+
+// ============================================================
+// RESET ADMIN — jalankan dari Apps Script editor:
+//   Runtime > Run > resetAdminPassword
+//   (ganti 'AdminPPM1@2026' dengan password baru jika mau)
+// ============================================================
+function resetAdminPassword() {
+  var newPass = 'AdminPPM1@2026';
+  var ss = getSS();
+  var sh = ss.getSheetByName(SHEET.USERS);
+  if (!sh) {
+    Logger.log('Sheet users belum ada. Jalankan setup() dulu.');
+    return;
+  }
+  var salt = genSalt();
+  var hash = hashPassword(newPass, salt);
+  sh.getRange(2, 1, 1, 6).setValues([['admin', hash, salt, 'admin', 'Admin PPM1', new Date().toISOString()]]);
+  // Hapus semua session lama
+  var shSes = ss.getSheetByName(SHEET.SESSIONS);
+  if (shSes && shSes.getLastRow() > 1) shSes.getRange(2, 1, shSes.getLastRow() - 1, 4).clearContent();
+  Logger.log('Password admin SETUJUH ke: ' + newPass);
+  Logger.log('Login sekarang: admin / ' + newPass);
+}
