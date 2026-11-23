@@ -260,17 +260,17 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
 // Ganti API_BASE dengan URL Web App dari SETUP.md
 // ============================================================
 const API_BASE = 'https://alifppm.github.io/ppm1-inventaris/backend/proxy.html';
-const API_BACKEND = 'https://script.google.com/macros/s/AKfycbxDVh6AQThEStUhffcNsMkE_5HX7ROGXKM_mZl2uyANqD_U9JoVqIcLXPugk7I8A_X0/exec';
+const API_BACKEND = 'https://script.google.com/macros/s/AKfycbzY6dKbnSn0lbIEAfal2078XzbcbQcShlGWE4Jt7IkxkWP8RaCxyBH7xykVFeRHzpMVLA/exec';
 const API_BASE_SET = API_BASE !== 'https://script.google.com/macros/s/XXXXX/exec';
 
-// Helper fetch — pakai proxy GitHub Pages untuk bypass CORS
+// Helper fetch — POST ke Apps Script (redirect follow)
 async function api(action, body, method='POST') {
   if (method==='GET') {
     const params = new URLSearchParams({ action, session: state.session||'' });
-    if (body.logType) params.set('logType', body.logType);
-    const r = await fetch(API_BASE + '?' + params, { redirect:'follow' });
+    if (body && body.logType) params.set('logType', body.logType);
+    const r = await fetch(API_BACKEND + '?' + params, { redirect:'follow' });
     const text = await r.text();
-    try { return JSON.parse(text); } catch { return { ok:false, error:'parse' }; }
+    try { return JSON.parse(text); } catch { return { ok:false, error:'parse', raw: text.slice(0,200) }; }
   }
   // POST
   const payload = { action, session: state.session||'', ...body };
@@ -280,8 +280,15 @@ async function api(action, body, method='POST') {
     body: JSON.stringify(payload),
     redirect: 'follow'
   });
-  const text = await r.text();
-  try { return JSON.parse(text); } catch { return { ok:false, error:'parse' }; }
+  let text = await r.text();
+  // Apps Script kadang balas HTML wrapper; cari JSON di dalamnya
+  try { return JSON.parse(text); }
+  catch {
+    // Cari JSON pattern di dalam HTML
+    const m = text.match(/\{.*"ok".*\}/s) || text.match(/\{"ok":[^<]*\}/);
+    if (m) { try { return JSON.parse(m[0]); } catch {} }
+    return { ok:false, error:'parse', raw: text.slice(0,200) };
+  }
 }
 
 const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1', LS_LOG='ppm1_log_v1', LS_SES='ppm1_session_v1', LS_ROLE='ppm1_role_v1';
