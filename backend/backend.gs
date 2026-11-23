@@ -34,15 +34,38 @@ function genSalt() {
 
 // ============================================================
 // SETUP — panggil sekali dari Apps Script editor (Runtime > Run > setup)
-// Buat sheet & seed user admin pertama
+// Buat spreadsheet baru + 5 sheets + seed user admin pertama
 // ============================================================
+const SS_ID_KEY = 'PPM1_SPREADSHEET_ID';
+
+function getSpreadsheet() {
+  // 1. Coba dari spreadsheet yang aktif (jika terikat)
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  // 2. Coba dari stored ID
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty(SS_ID_KEY);
+  if (id) {
+    try { return SpreadsheetApp.openById(id); } catch (e) {}
+  }
+  throw new Error('Spreadsheet tidak ditemukan. Jalankan setup() dulu.');
+}
+
 function setup() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  // 1. Buka spreadsheet aktif, atau buat baru
+  let ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) {
+    ss = SpreadsheetApp.create('PPM1 Database');
+    // Simpan ID-nya
+    PropertiesService.getScriptProperties().setProperty(SS_ID_KEY, ss.getId());
+    Logger.log('Spreadsheet baru dibuat: ' + ss.getUrl());
+  }
+  // 2. Buat semua sheet
   Object.entries(SHEET).forEach(([k, name]) => {
     let sh = ss.getSheetByName(name);
     if (!sh) sh = ss.insertSheet(name);
   });
-  // Header
+  // 3. Header
   ss.getSheetByName(SHEET.ITEMS).getRange('A1:J1').setValues([[
     'id','nama','kategori','foto','kondisi','qty','harga','keterangan','updated_at','created_at'
   ]]);
@@ -58,8 +81,7 @@ function setup() {
   ss.getSheetByName(SHEET.LABELS).getRange('A1:C1').setValues([
     ['jenis','label','created_at']
   ]);
-
-  // Seed admin pertama (hanya jika sheet users kosong)
+  // 4. Seed admin pertama
   const usersSheet = ss.getSheetByName(SHEET.USERS);
   if (usersSheet.getLastRow() < 2) {
     const salt = genSalt();
@@ -70,6 +92,7 @@ function setup() {
   }
   logSafe('setup', 'Backend di-setup, admin pertama: ' + CONFIG.DEFAULT_ADMIN, 'system');
   SpreadsheetApp.flush();
+  Logger.log('Setup selesai. Spreadsheet: ' + ss.getUrl());
 }
 
 function logSafe(type, detail, userId) {
@@ -84,7 +107,7 @@ function logSafe(type, detail, userId) {
 // AUTH — login & session
 // ============================================================
 function login(username, password) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.USERS);
   if (!sh) throw new Error('Sheet users belum ada. Jalankan setup() dulu.');
   const rows = sh.getRange(2, 1, Math.max(sh.getLastRow() - 1, 1), 6).getValues();
@@ -121,7 +144,7 @@ function logout(session) {
 // CRUD ITEMS
 // ============================================================
 function listItems() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.ITEMS);
   if (!sh || sh.getLastRow() < 2) return [];
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues();
@@ -133,7 +156,7 @@ function listItems() {
 }
 
 function saveItem(item, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.ITEMS);
   if (!sh) throw new Error('Sheet items belum ada');
   const now = new Date().toISOString();
@@ -161,7 +184,7 @@ function saveItem(item, userId) {
 }
 
 function deleteItem(id, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.ITEMS);
   if (!sh) return { ok: false };
   const lastRow = sh.getLastRow();
@@ -187,7 +210,7 @@ function deleteItem(id, userId) {
 // CRUD BOOKINGS
 // ============================================================
 function listBookings() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.BOOKINGS);
   if (!sh || sh.getLastRow() < 2) return [];
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues();
@@ -199,7 +222,7 @@ function listBookings() {
 }
 
 function saveBooking(b, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.BOOKINGS);
   if (!sh) throw new Error('Sheet bookings belum ada');
   const now = new Date().toISOString();
@@ -211,7 +234,7 @@ function saveBooking(b, userId) {
 }
 
 function closeBooking(id, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.BOOKINGS);
   if (!sh) return { ok: false };
   const lastRow = sh.getLastRow();
@@ -226,7 +249,7 @@ function closeBooking(id, userId) {
 }
 
 function deleteBooking(id, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.BOOKINGS);
   if (!sh) return { ok: false };
   const lastRow = sh.getLastRow();
@@ -244,7 +267,7 @@ function deleteBooking(id, userId) {
 // LABELS & USERS (admin only)
 // ============================================================
 function listLabels() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.LABELS);
   if (!sh || sh.getLastRow() < 2) return { kategori: [], kondisi: [] };
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues();
@@ -254,7 +277,7 @@ function listLabels() {
   };
 }
 function addLabel(jenis, label, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.LABELS);
   if (!sh) throw new Error('Sheet labels belum ada');
   sh.append([jenis, label, new Date().toISOString()]);
@@ -262,7 +285,7 @@ function addLabel(jenis, label, userId) {
   return { ok: true };
 }
 function deleteLabel(jenis, label, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.LABELS);
   if (!sh) return { ok: false };
   const lastRow = sh.getLastRow();
@@ -279,7 +302,7 @@ function deleteLabel(jenis, label, userId) {
 }
 
 function listUsers() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.USERS);
   if (!sh || sh.getLastRow() < 2) return [];
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues();
@@ -288,7 +311,7 @@ function listUsers() {
 
 function addUser(username, password, role, nama, byUserId) {
   if (role !== 'admin') throw new Error('Hanya admin yang bisa tambah user');
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.USERS);
   if (!sh) throw new Error('Sheet users belum ada');
   const salt = genSalt();
@@ -299,7 +322,7 @@ function addUser(username, password, role, nama, byUserId) {
 }
 
 function changePassword(username, newPass, byUserId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.USERS);
   if (!sh) return { ok: false };
   const lastRow = sh.getLastRow();
@@ -317,7 +340,7 @@ function changePassword(username, newPass, byUserId) {
 
 function removeUser(username, byUserId) {
   if (username === byUserId) throw new Error('Tidak bisa hapus diri sendiri');
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.USERS);
   if (!sh) return { ok: false };
   const lastRow = sh.getLastRow();
@@ -335,7 +358,7 @@ function removeUser(username, byUserId) {
 // ============================================================
 function log(type, detail, userId) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet();
     const sh = ss.getSheetByName(SHEET.LOG);
     if (!sh) return;
     sh.getRange(sh.getLastRow() + 1, 1, 1, 4).setValues([[
@@ -352,7 +375,7 @@ function log(type, detail, userId) {
 }
 
 function listLog(types, userId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sh = ss.getSheetByName(SHEET.LOG);
   if (!sh || sh.getLastRow() < 2) return [];
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues();
