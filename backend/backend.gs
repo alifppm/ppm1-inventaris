@@ -199,8 +199,8 @@ function saveItem(item, userId) {
     +item.qty || 0, +item.harga || 0, item.keterangan || '', now, item.created_at || now];
   // Update?
   if (sh.getLastRow() >= 2) {
-    const ids = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(function(r) { return String(r[0]); });
-    const idx = ids.indexOf(String(item.id));
+    const ids = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(function(r) { return String(r[0]).trim(); });
+    const idx = ids.indexOf(String(item.id).trim());
     if (idx >= 0) {
       sh.getRange(idx + 2, 1, 1, 10).setValues([row]);
       log('item-edit', 'Edit item "' + item.nama + '"', userId);
@@ -303,9 +303,13 @@ function addLabel(jenis, label, userId) {
   const ss = getSS();
   const sh = ss.getSheetByName(SHEET.LABELS);
   if (!sh) throw new Error('Sheet labels belum ada');
+  // Idempotent: jangan duplikat
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+  const exists = rows.some(function(r) { return r[0] === jenis && String(r[1]).toUpperCase() === String(label).toUpperCase(); });
+  if (exists) return { ok: true, action: 'already_exists' };
   appendRow(sh, [jenis, label, new Date().toISOString()]);
   log('label-add', 'Tambah ' + jenis + ' "' + label + '"', userId);
-  return { ok: true };
+  return { ok: true, action: 'created' };
 }
 function deleteLabel(jenis, label, userId) {
   const ss = getSS();

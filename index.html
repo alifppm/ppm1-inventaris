@@ -472,8 +472,7 @@ function updateToolbarRole(){
     if(!badge){badge=document.createElement('span');badge.id='roBadge';
       badge.className='pill';badge.style.cssText='background:#475569;color:#e2e8f0;margin-left:.5rem';
       badge.textContent='🔒 Mode baca (tamu)';
-      const hdr=document.getElementById('stTotal')?.parentElement?.parentElement;
-      const tb=document.querySelector('#tab-item .toolbar')||document.querySelector('.toolbar');
+      const tb=document.querySelector('#tab-inv .toolbar');
       if(tb)tb.insertBefore(badge, tb.querySelector('#btnAdd')||null);
     }
     badge.style.display='';
@@ -596,14 +595,14 @@ function addBooking(){
   state.bookings.push({id:uid(),itemId,tanggalPinjam:tgl,tanggalKembali:kembali,pelanggan:nama,qty,status:'AKTIF',catatan:cat,harga:+it?.harga||0});
   const nb=state.bookings[state.bookings.length-1];
   log('booking-add',`Booking "${it?.nama}" utk ${nama}, ${tgl}→${kembali||'?'} x${qty}`);
-  saveLS();syncToBackend(async()=>await api('booking-add',nb));render();toast('Booking dibuat');
+  saveLS();syncToBackend(async()=>await api('booking-save',{b:nb}));render();toast('Booking dibuat');
 }
 function selesaiBooking(id){
   if(!requireEdit())return;
   const b=state.bookings.find(x=>x.id===id);if(!b)return;
   b.status='SELESAI';b.tanggalSelesai=today();
-  log('booking-done',`Booking "${b.pelanggan}" — item "${(state.items.find(x=>x.id===b.itemId)?.name||b.itemId)}" ditutup ${today()}`);
-  saveLS();syncToBackend(async()=>await api('booking-done',{id}));render();toast('Peminjaman ditutup');
+  log('booking-done',`Booking "${b.pelanggan}" — item "${(state.items.find(x=>x.id===b.itemId)?.nama||b.itemId)}" ditutup ${today()}`);
+  saveLS();syncToBackend(async()=>await api('booking-close',{id}));render();toast('Peminjaman ditutup');
 }
 window.selesaiBooking=selesaiBooking;
 function hapusBooking(id){
@@ -624,9 +623,10 @@ function cekStok(){
   if(!it){document.getElementById('stockResult').innerHTML='<div style="color:var(--warn)">Item tidak ditemukan.</div>';return}
   const stok=+it.qty||0;
   const bks=state.bookings.filter(b=>b.itemId===it.id&&b.status!=='SELESAI');
+  // Loop tanggal dari `dari` ke `sampai` (pakai string, tidak pakai Date UTC untuk hindari off-by-one WIB)
   const dates=[];
-  let d=new Date(dari),end=new Date(sampai);
-  while(d<=end){dates.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1)}
+  let d=new Date(dari+'T00:00:00');const end=new Date(sampai+'T00:00:00');
+  while(d<=end){dates.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+86400000)}
   const hasil=dates.map(dateStr=>{
     const pinjam=bks.filter(b=>b.tanggalPinjam<=dateStr&&(!b.tanggalKembali||dateStr<=b.tanggalKembali));
     const terpakai=pinjam.reduce((s,b)=>s+(+b.qty||0),0);
@@ -642,9 +642,9 @@ function cekStok(){
     </table>`;
 }
 
-function addLabel(type,val){if(!requireEdit())return;val=val.trim().toUpperCase();if(!val)return;if(state[type].some(x=>x.toUpperCase()===val)){toast('Sudah ada',true);return}state[type].push(val);log('label-add',`Tambah label ${type} "${val}"`);saveLS();syncToBackend(async()=>await api('label-add',{type,label:val}));render()}
+function addLabel(type,val){if(!requireEdit())return;val=val.trim().toUpperCase();if(!val)return;if(state[type].some(x=>x.toUpperCase()===val)){toast('Sudah ada',true);return}state[type].push(val);log('label-add',`Tambah label ${type} "${val}"`);saveLS();syncToBackend(async()=>await api('label-add',{jenis:type,label:val}));render()}
 window.addLabel=addLabel;
-function rmLabel(type,val){if(!requireEdit())return;if(!confirm(`Hapus "${val}"? Item yang memakainya tidak dihapus.`))return;state[type]=state[type].filter(x=>x!==val);log('label-del',`Hapus label ${type} "${val}"`);saveLS();syncToBackend(async()=>await api('label-delete',{type,label:val}));render()}
+function rmLabel(type,val){if(!requireEdit())return;if(!confirm(`Hapus "${val}"? Item yang memakainya tidak dihapus.`))return;state[type]=state[type].filter(x=>x!==val);log('label-del',`Hapus label ${type} "${val}"`);saveLS();syncToBackend(async()=>await api('label-delete',{jenis:type,label:val}));render()}
 window.rmLabel=rmLabel;
 
 function switchTab(name){
@@ -691,7 +691,7 @@ async function renderUsers(){
 
 async function delUser(username){
   if(!requireAdmin())return;
-  if(username===state.nama){toast('Tidak bisa hapus akun sendiri',true);return}
+  if(username===state.username||username==='admin'){toast('Tidak bisa hapus akun ini',true);return}
   if(!confirm(`Hapus pengguna "${username}"?`))return;
   const r=await api('user-delete',{username});
   if(r.ok){log('user-del',`Hapus user "${username}"`);toast('Pengguna dihapus');renderUsers()}
@@ -739,8 +739,13 @@ document.getElementById('lightbox').addEventListener('click',e=>{if(e.target.id=
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('lightbox').classList.remove('active')});
 
 async function init(){
-  const seed=await loadSeed();
-  state.items=seed.length?seed:loadLS(LS_KEY,[]);
+  // Gunakan localStorage jika ada; seed HANYA untuk pertama kali (localStorage kosong).
+  // Ini mencegah seed menimpa data yang sudah user edit.
+  state.items=loadLS(LS_KEY,null);
+  if(state.items===null){
+    const seed=await loadSeed();
+    state.items=seed.length?seed:[];
+  }
   state.kategori=loadLS(LS_KAT,DEFAULT_KATEGORI.slice());
   state.kondisi=loadLS(LS_KON,DEFAULT_KONDISI.slice());
   state.bookings=loadLS(LS_BK,[]);
@@ -834,7 +839,7 @@ function genReport(){
   const rusak=state.items.filter(i=>i.kondisi==='RUSAK').length;
   const hilang=state.items.filter(i=>i.kondisi==='HILANG').length;
   const perbaiki=state.items.filter(i=>i.kondisi==='PERBAIKAN').length;
-  const topBookings=[...active].sort((a,b)=>(b.harga||0)*(b.qty||0)-(a.harga||0)*(a.qty||0)).slice(0,5);
+  const topBookings=[...active].sort((a,b)=>((+b.harga||0)*(+b.qty||0))-((+a.harga||0)*(+a.qty||0))).slice(0,5);
   const logRange=state.log.filter(l=>l.t.slice(0,10)>=dari&&l.t.slice(0,10)<=sampai);
   document.getElementById('repResult').innerHTML=`
     <div class="stats" style="padding:0;margin-bottom:1rem">
@@ -874,11 +879,10 @@ document.addEventListener('DOMContentLoaded', function(){
     try{
       const r=await api('login',{username:u,password:p});
       if(!r.ok){document.getElementById('luError').textContent=r.error||'Login gagal';return}
-      state.session=r.session;state.role=r.role;state.nama=r.nama||u;
+      state.session=r.session;state.role=r.role;state.nama=r.nama||u;state.username=u;
       localStorage.setItem(LS_SES,JSON.stringify({session:r.session,username:u,role:r.role,nama:r.nama}));
       ov.style.display='none';showApp();showUserMeta();toast('Selamat datang '+esc(r.nama||u));
-      syncFromBackend().then(render);
-      updateToolbarRole(); // tampilkan/sembunyikan tab Pengguna sesuai role
+      syncFromBackend().then(function(){ render(); updateToolbarRole() });
     }catch(e){document.getElementById('luError').textContent='Gagal terhubung backend (API_BASE belum diset?)'}
   }
   function logout(){
@@ -899,9 +903,9 @@ document.addEventListener('DOMContentLoaded', function(){
   if(sess && API_BASE_SET){
     api('me',{},'GET').then(r=>{
       if(r.ok&&r.user&&r.user.username===sess.username){
-        state.session=sess.session;state.role=r.user.role;state.nama=r.user.nama;
+        state.session=sess.session;state.role=r.user.role;state.nama=r.user.nama;state.username=r.user.username;
         ov.style.display='none';showApp();showUserMeta();
-        updateToolbarRole();syncFromBackend().then(render);
+        syncFromBackend().then(function(){ render(); updateToolbarRole() });
       } else { showLogin(); }
     }).catch(()=>{ showLogin(); });
   } else {
