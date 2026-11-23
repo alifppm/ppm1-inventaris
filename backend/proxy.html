@@ -5,14 +5,14 @@
 <script>
 // Proses request dari query parameter ?action=&session=&logType=
 // Return JSON dari backend Apps Script
-const URL_ = 'https://script.google.com/macros/s/AKfycbxVML0D4NF4oI6ntDYAHHd8TQL0QKN2BNY_5bG6EoA3t3l12anWM_yeLKCmkyoerbtv/exec';
+const API_BACKEND = 'https://script.google.com/macros/s/AKfycbxDVh6AQThEStUhffcNsMkE_5HX7ROGXKM_mZl2uyANqD_U9JoVqIcLXPugk7I8A_X0/exec';
 const params = new URLSearchParams(location.search);
 const action = params.get('action') || 'items';
 const session = params.get('session') || '';
 const logType = params.get('logType') || '';
 
 async function run() {
-  const target = `${URL_}?action=${encodeURIComponent(action)}&session=${encodeURIComponent(session)}${logType ? `&logType=${encodeURIComponent(logType)}` : ''}`;
+  const target = `${API_BACKEND}?action=${encodeURIComponent(action)}&session=${encodeURIComponent(session)}${logType ? `&logType=${encodeURIComponent(logType)}` : ''}`;
   try {
     const r = await fetch(target, { redirect: 'follow' });
     const text = await r.text();
