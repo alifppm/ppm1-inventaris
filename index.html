@@ -259,18 +259,29 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
 // Phase 2: backend Google Apps Script
 // Ganti API_BASE dengan URL Web App dari SETUP.md
 // ============================================================
-const API_BASE = 'https://script.google.com/macros/s/AKfycbxVML0D4NF4oI6ntDYAHHd8TQL0QKN2BNY_5bG6EoA3t3l12anWM_yeLKCmkyoerbtv/exec'; // ← ganti
+const API_BASE = 'https://alifppm.github.io/ppm1-inventaris/backend/proxy.html';
+const API_BACKEND = 'https://script.google.com/macros/s/AKfycbxVML0D4NF4oI6ntDYAHHd8TQL0QKN2BNY_5bG6EoA3t3l12anWM_yeLKCmkyoerbtv/exec';
 const API_BASE_SET = API_BASE !== 'https://script.google.com/macros/s/XXXXX/exec';
 
-// Helper fetch (no-cors, Apps Script)
+// Helper fetch — pakai proxy GitHub Pages untuk bypass CORS
 async function api(action, body, method='POST') {
-  if (!API_BASE_SET) throw new Error('API_BASE belum diset');
-  const opts = { method, headers: {'Content-Type':'text/plain;charset=utf-8'}, redirect:'follow' };
-  if (method==='POST') opts.body = JSON.stringify({ action, session: state.session||'', ...body });
-  else opts.body = null;
-  const url = method==='POST' ? API_BASE : API_BASE + '?' + new URLSearchParams({action, session: state.session||''});
-  const r = await fetch(url, opts);
-  try { return await r.json(); } catch { return { ok:false, error:'parse' }; }
+  if (method==='GET') {
+    const params = new URLSearchParams({ action, session: state.session||'' });
+    if (body.logType) params.set('logType', body.logType);
+    const r = await fetch(API_BASE + '?' + params, { redirect:'follow' });
+    const text = await r.text();
+    try { return JSON.parse(text); } catch { return { ok:false, error:'parse' }; }
+  }
+  // POST
+  const payload = { action, session: state.session||'', ...body };
+  const r = await fetch(API_BACKEND, {
+    method: 'POST',
+    headers: {'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload),
+    redirect: 'follow'
+  });
+  const text = await r.text();
+  try { return JSON.parse(text); } catch { return { ok:false, error:'parse' }; }
 }
 
 const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1', LS_LOG='ppm1_log_v1', LS_SES='ppm1_session_v1', LS_ROLE='ppm1_role_v1';
