@@ -650,29 +650,60 @@ function genReport(){
 window.genReport=genReport;
 
 // LOGIN SYSTEM (Phase 2)
-async function doLogin(){
-  const u=document.getElementById('luUser').value.trim();
-  const p=document.getElementById('luPass').value;
-  if(!u||!p){document.getElementById('luError').textContent='Isi username & password';return}
-  try{
-    const r=await api('login',{username:u,password:p});
-    if(!r.ok){document.getElementById('luError').textContent=r.error||'Login gagal';return}
-    state.session=r.session;state.role=r.role;state.nama=r.nama||u;
-    localStorage.setItem(LS_SES,JSON.stringify({session:r.session,username:u,role:r.role,nama:r.nama}));
-    document.getElementById('loginOverlay').style.display='none';showApp();showUserMeta();toast('Selamat datang '+esc(r.nama||u));
-  }catch(e){document.getElementById('luError').textContent='Gagal terhubung backend'}
-}
-function logout(){
-  if(API_BASE_SET&&state.session)api('logout',{}).catch(()=>{});
-  localStorage.removeItem(LS_SES);state={...state,session:null,role:null,nama:null};showLogin();
-}
-function showLogin(){document.getElementById('loginOverlay').style.display='flex'}
-function showApp(){document.querySelectorAll('[id^="tab-"]').forEach(x=>x.style.display=x.tagName==='DIV'&&x.id==='tab-inv'||true?'')};
-function showUserMeta(){const el=document.getElementById('userMeta');if(el)el.innerHTML=`👤 ${esc(state.nama||state.role)} · <a href="#" id="btnLogout" style="color:var(--accent)">Keluar</a> • <span id="ts">-</span>`};
-document.addEventListener('click',e=>{if(e.target.id==='btnLogout'){e.preventDefault();logout()}});
-document.getElementById('luBtn').addEventListener('click',doLogin);
-document.getElementById('luPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-document.getElementById('luSkip').addEventListener('click',e=>{e.preventDefault();localStorage.removeItem(LS_SES);state={...state,session:null,role:'viewer',nama:'Tamu'};showApp();showUserMeta();toast('Mode tamu (offline)')}));
+document.addEventListener('DOMContentLoaded', function(){
+  const ov = document.getElementById('loginOverlay');
+  if(!ov) return;
+
+  const luBtn = document.getElementById('luBtn');
+  const luPass = document.getElementById('luPass');
+  const luSkip = document.getElementById('luSkip');
+
+  async function doLogin(){
+    const u=document.getElementById('luUser').value.trim();
+    const p=luPass.value;
+    if(!u||!p){document.getElementById('luError').textContent='Isi username & password';return}
+    try{
+      const r=await api('login',{username:u,password:p});
+      if(!r.ok){document.getElementById('luError').textContent=r.error||'Login gagal';return}
+      state.session=r.session;state.role=r.role;state.nama=r.nama||u;
+      localStorage.setItem(LS_SES,JSON.stringify({session:r.session,username:u,role:r.role,nama:r.nama}));
+      ov.style.display='none';showApp();showUserMeta();toast('Selamat datang '+esc(r.nama||u));
+    }catch(e){document.getElementById('luError').textContent='Gagal terhubung backend (API_BASE belum diset?)'}
+  }
+  function logout(){
+    if(API_BASE_SET&&state.session)api('logout',{}).catch(()=>{});
+    localStorage.removeItem(LS_SES);state={...state,session:null,role:null,nama:null};
+    ov.style.display='flex';document.getElementById('luUser').value='';luPass.value='';
+  }
+  function showLogin(){ov.style.display='flex'}
+  function showApp(){document.querySelectorAll('[id^="tab-"]').forEach(x=>{if(x.tagName==='DIV')x.style.display=''})}
+  function showUserMeta(){
+    const el=document.getElementById('userMeta');
+    if(el)el.innerHTML=`👤 ${esc(state.nama||state.role)} · <a href="#" onclick="event.preventDefault();logout()" style="color:var(--accent)">Keluar</a> • <span id="ts">-</span>`;
+  }
+  window.logout=logout;
+
+  // Cek session tersimpan
+  const sess = JSON.parse(localStorage.getItem(LS_SES)||'null');
+  if(sess && API_BASE_SET){
+    api('me',{},'GET').then(r=>{
+      if(r.ok&&r.user&&r.user.username===sess.username){
+        state.session=sess.session;state.role=r.user.role;state.nama=r.user.nama;
+        ov.style.display='none';showApp();showUserMeta();
+      } else { showLogin(); }
+    }).catch(()=>{ showLogin(); });
+  } else {
+    showLogin();
+  }
+
+  luBtn.addEventListener('click',doLogin);
+  luPass.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+  luSkip.addEventListener('click',e=>{
+    e.preventDefault();localStorage.removeItem(LS_SES);
+    state={...state,session:null,role:'viewer',nama:'Tamu'};
+    ov.style.display='none';showApp();showUserMeta();toast('Mode tamu (offline)');
+  });
+});
 
 init();
 </script>
