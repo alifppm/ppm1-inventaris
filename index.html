@@ -88,7 +88,7 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
 <body>
 <header>
   <h1>📦 PPM1 — Inventaris & Booking</h1>
-  <div class="meta">Putri Pinang Masak 1 • <span id="ts">-</span></div>
+  <div class="meta" id="userMeta">Putri Pinang Masak 1 • <span id="ts">-</span></div>
 </header>
 
 <div class="tabs">
@@ -235,15 +235,50 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
 
 <div class="lightbox" id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></div>
 <div class="toast" id="toast"></div>
+
+<!-- Login Overlay -->
+<div id="loginOverlay" style="position:fixed;inset:0;background:#0f172a;z-index:100;display:none;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--card);border-radius:12px;padding:1.5rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+    <h2 style="margin:0 0 .3rem;font-size:1.25rem">🔐 Masuk PPM1</h2>
+    <p style="margin:0 0 1rem;font-size:.85rem;color:var(--muted)">Masuk untuk mengakses data inventaris & booking.</p>
+    <div style="display:grid;gap:.6rem">
+      <input id="luUser" placeholder="Username" style="width:100%;background:#0f172a;border:1px solid var(--border);color:var(--text);padding:.6rem;border-radius:8px;font-size:.9rem">
+      <input id="luPass" type="password" placeholder="Password" style="width:100%;background:#0f172a;border:1px solid var(--border);color:var(--text);padding:.6rem;border-radius:8px;font-size:.9rem">
+      <button id="luBtn" style="width:100%">Masuk</button>
+    </div>
+    <div id="luError" style="color:#fca5a5;font-size:.82rem;margin-top:.6rem;min-height:1.2rem"></div>
+    <div style="margin-top:.8rem;font-size:.75rem;color:var(--muted);text-align:center">Mode lokal (offline) • <a href="#" id="luSkip" style="color:var(--accent)">Lewati login →</a></div>
+  </div>
+</div>
+
 <footer>localStorage (offline-first) • Gratis • <a href="#" id="btnSeedReload" style="color:var(--accent)">Muat ulang seed</a></footer>
 
 <script>
-const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1', LS_LOG='ppm1_log_v1';
+// ============================================================
+// PPM1 — Inventaris & Booking
+// Phase 2: backend Google Apps Script
+// Ganti API_BASE dengan URL Web App dari SETUP.md
+// ============================================================
+const API_BASE = 'https://script.google.com/macros/s/XXXXX/exec'; // ← ganti
+const API_BASE_SET = API_BASE !== 'https://script.google.com/macros/s/XXXXX/exec';
+
+// Helper fetch (no-cors, Apps Script)
+async function api(action, body, method='POST') {
+  if (!API_BASE_SET) throw new Error('API_BASE belum diset');
+  const opts = { method, headers: {'Content-Type':'text/plain;charset=utf-8'}, redirect:'follow' };
+  if (method==='POST') opts.body = JSON.stringify({ action, session: state.session||'', ...body });
+  else opts.body = null;
+  const url = method==='POST' ? API_BASE : API_BASE + '?' + new URLSearchParams({action, session: state.session||''});
+  const r = await fetch(url, opts);
+  try { return await r.json(); } catch { return { ok:false, error:'parse' }; }
+}
+
+const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1', LS_LOG='ppm1_log_v1', LS_SES='ppm1_session_v1', LS_ROLE='ppm1_role_v1';
 const DEFAULT_KONDISI=['BAIK','RUSAK','PERBAIKAN','HILANG'];
 const DEFAULT_KATEGORI=['UMUM','TANJAK RUMPAK','SONGKET SELENDANG'];
 const LOG_CAP=500;
 
-let state={items:[],kategori:[],kondisi:[],bookings:[],log:[],sort:{k:'nama',dir:1},filter:{q:'',kat:'',kon:''},editingId:null,logTypeFilter:''};
+let state={items:[],kategori:[],kondisi:[],bookings:[],log:[],sort:{k:'nama',dir:1},filter:{q:'',kat:'',kon:''},editingId:null,logTypeFilter:'',session:null,role:null,nama:null};
 
 function log(type,detail){
   state.log.unshift({t:new Date().toISOString(),type,detail});
@@ -613,6 +648,32 @@ function genReport(){
     </table>`;
 }
 window.genReport=genReport;
+
+// LOGIN SYSTEM (Phase 2)
+async function doLogin(){
+  const u=document.getElementById('luUser').value.trim();
+  const p=document.getElementById('luPass').value;
+  if(!u||!p){document.getElementById('luError').textContent='Isi username & password';return}
+  try{
+    const r=await api('login',{username:u,password:p});
+    if(!r.ok){document.getElementById('luError').textContent=r.error||'Login gagal';return}
+    state.session=r.session;state.role=r.role;state.nama=r.nama||u;
+    localStorage.setItem(LS_SES,JSON.stringify({session:r.session,username:u,role:r.role,nama:r.nama}));
+    document.getElementById('loginOverlay').style.display='none';showApp();showUserMeta();toast('Selamat datang '+esc(r.nama||u));
+  }catch(e){document.getElementById('luError').textContent='Gagal terhubung backend'}
+}
+function logout(){
+  if(API_BASE_SET&&state.session)api('logout',{}).catch(()=>{});
+  localStorage.removeItem(LS_SES);state={...state,session:null,role:null,nama:null};showLogin();
+}
+function showLogin(){document.getElementById('loginOverlay').style.display='flex'}
+function showApp(){document.querySelectorAll('[id^="tab-"]').forEach(x=>x.style.display=x.tagName==='DIV'&&x.id==='tab-inv'||true?'')};
+function showUserMeta(){const el=document.getElementById('userMeta');if(el)el.innerHTML=`👤 ${esc(state.nama||state.role)} · <a href="#" id="btnLogout" style="color:var(--accent)">Keluar</a> • <span id="ts">-</span>`};
+document.addEventListener('click',e=>{if(e.target.id==='btnLogout'){e.preventDefault();logout()}});
+document.getElementById('luBtn').addEventListener('click',doLogin);
+document.getElementById('luPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('luSkip').addEventListener('click',e=>{e.preventDefault();localStorage.removeItem(LS_SES);state={...state,session:null,role:'viewer',nama:'Tamu'};showApp();showUserMeta();toast('Mode tamu (offline)')}));
+
 init();
 </script>
 </body>
