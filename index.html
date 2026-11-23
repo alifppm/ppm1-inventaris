@@ -95,6 +95,7 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
   <button class="tab-btn active" data-tab="inv">📦 Inventaris</button>
   <button class="tab-btn" data-tab="book">📅 Booking</button>
   <button class="tab-btn" data-tab="stock">🔍 Cek Stok</button>
+  <button class="tab-btn" data-tab="log">📋 Log & Laporan</button>
 </div>
 
 <div id="tab-inv">
@@ -202,23 +203,73 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
   </div>
 </div>
 
+<div id="tab-log" style="display:none">
+  <div class="panel">
+    <h3>📋 Log Aktivitas (Audit Trail)</h3>
+    <div class="body">
+      <p style="color:var(--muted);font-size:.85rem;margin:.2rem 0 .8rem">Setiap tambah/edit/hapus item & booking tercatat. Bisa difilter tipe dan dibatasi 500 entri terakhir.</p>
+      <div class="toolbar" style="padding:0 0 .8rem">
+        <select id="logType"><option value="">Semua Jenis</option><option>item-add</option><option>item-edit</option><option>item-del</option><option>booking-add</option><option>booking-done</option><option>booking-del</option><option>label-add</option><option>label-del</option><option>import</option><option>export</option></select>
+        <button class="ghost sm" id="btnClearLog">🧹 Kosongkan Log</button>
+        <button class="ghost sm" id="btnExportLog">⬇ Export Log</button>
+      </div>
+      <table style="margin:0;background:transparent">
+        <thead><tr><th>Waktu</th><th>Jenis</th><th>Rincian</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>📊 Laporan Mingguan</h3>
+    <div class="body">
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:1rem">
+        <div><label>Mulai</label><input type="date" id="repDari"></div>
+        <div><label>Selesai</label><input type="date" id="repSampai"></div>
+        <div style="align-self:end"><button id="btnReport">📊 Tampilkan</button></div>
+      </div>
+      <div id="repResult"></div>
+    </div>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></div>
 <div class="toast" id="toast"></div>
 <footer>localStorage (offline-first) • Gratis • <a href="#" id="btnSeedReload" style="color:var(--accent)">Muat ulang seed</a></footer>
 
 <script>
-const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1';
+const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1', LS_LOG='ppm1_log_v1';
 const DEFAULT_KONDISI=['BAIK','RUSAK','PERBAIKAN','HILANG'];
 const DEFAULT_KATEGORI=['UMUM','TANJAK RUMPAK','SONGKET SELENDANG'];
+const LOG_CAP=500;
 
-let state={items:[],kategori:[],kondisi:[],bookings:[],sort:{k:'nama',dir:1},filter:{q:'',kat:'',kon:''},editingId:null};
+let state={items:[],kategori:[],kondisi:[],bookings:[],log:[],sort:{k:'nama',dir:1},filter:{q:'',kat:'',kon:''},editingId:null,logTypeFilter:''};
+
+function log(type,detail){
+  state.log.unshift({t:new Date().toISOString(),type,detail});
+  if(state.log.length>LOG_CAP) state.log.length=LOG_CAP;
+}
+function logRender(){
+  const f=state.logTypeFilter;
+  const rows=state.log.filter(l=>!f||l.type===f).slice(0,100);
+  const icon={
+    'item-add':'➕','item-edit':'✏️','item-del':'🗑','booking-add':'📅','booking-done':'✅','booking-del':'❌',
+    'label-add':'🏷','label-del':'🚫','import':'⬇','export':'⬆'
+  };
+  document.getElementById('logBody').innerHTML=rows.map(l=>`
+    <tr>
+      <td style="white-space:nowrap;font-family:monospace;font-size:.75rem">${new Date(l.t).toLocaleString('id-ID')}</td>
+      <td><span class="pill info">${icon[l.type]||'•'} ${esc(l.type)}</span></td>
+      <td style="font-size:.82rem">${esc(l.detail)}</td>
+    </tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:1rem">Belum ada aktivitas.</td></tr>';
+}
 
 function uid(){return Array.from({length:8},()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('')}
 function today(){return new Date().toISOString().slice(0,10)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function loadSeed(){try{const r=await fetch('data-seed.json');if(!r.ok)throw 0;const a=await r.json();localStorage.setItem(LS_KEY,JSON.stringify(a));return a}catch{return[]}}
 function loadLS(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v??def}catch{return def}}
-function saveLS(){localStorage.setItem(LS_KEY,JSON.stringify(state.items));localStorage.setItem(LS_KAT,JSON.stringify(state.kategori));localStorage.setItem(LS_KON,JSON.stringify(state.kondisi));localStorage.setItem(LS_BK,JSON.stringify(state.bookings))}
+function saveLS(){localStorage.setItem(LS_KEY,JSON.stringify(state.items));localStorage.setItem(LS_KAT,JSON.stringify(state.kategori));localStorage.setItem(LS_KON,JSON.stringify(state.kondisi));localStorage.setItem(LS_BK,JSON.stringify(state.bookings));localStorage.setItem(LS_LOG,JSON.stringify(state.log))}
 function toast(m,e,w){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' error':w?' warn':'');setTimeout(()=>t.className='toast',3500)}
 
 function fotoHtml(foto,nama,sm){
@@ -266,6 +317,7 @@ function render(){
   document.getElementById('stHilang').textContent=state.items.filter(i=>i.kondisi==='HILANG').length;
   document.getElementById('stBook').textContent=state.bookings.filter(b=>b.status==='AKTIF').length;
   syncLabels();renderTags();renderDatalists();renderFilterSelects();
+  logRender();
 
   const q=state.filter.q.toLowerCase();
   let rows=state.items.filter(i=>{
@@ -339,8 +391,10 @@ window.editItem=editItem;
 function delItem(id){
   const it=state.items.find(x=>x.id===id);
   if(!confirm(`Hapus "${it?.nama}"? Booking terkait juga dihapus.`))return;
+  const nBk=state.bookings.filter(b=>b.itemId===id).length;
   state.items=state.items.filter(x=>x.id!==id);
   state.bookings=state.bookings.filter(b=>b.itemId!==id);
+  log('item-del',`Hapus item "${it?.nama}" + ${nBk} booking terkait`);
   saveLS();render();toast('Item & bookingnya dihapus');
 }
 window.delItem=delItem;
@@ -367,17 +421,21 @@ function addBooking(){
   const it=state.items.find(x=>x.id===itemId);
   if(qty>(+it?.qty||0)){toast(`Qty ${qty} melebihi stok ${it?.qty}`,true);return}
   state.bookings.push({id:uid(),itemId,tanggalPinjam:tgl,tanggalKembali:kembali,pelanggan:nama,qty,status:'AKTIF',catatan:cat,harga:+it?.harga||0});
+  log('booking-add',`Booking "${it?.nama}" utk ${nama}, ${tgl}→${kembali||'?'} x${qty}`);
   saveLS();render();toast('Booking dibuat');
 }
 function selesaiBooking(id){
   const b=state.bookings.find(x=>x.id===id);if(!b)return;
   b.status='SELESAI';b.tanggalSelesai=today();
+  log('booking-done',`Booking "${b.pelanggan}" — item "${(state.items.find(x=>x.id===b.itemId)?.name||b.itemId)}" ditutup ${today()}`);
   saveLS();render();toast('Peminjaman ditutup');
 }
 window.selesaiBooking=selesaiBooking;
 function hapusBooking(id){
   if(!confirm('Hapus booking ini?'))return;
+  const b=state.bookings.find(x=>x.id===id);
   state.bookings=state.bookings.filter(b=>b.id!==id);
+  log('booking-del',`Hapus booking "${b?.pelanggan}" — item "${state.items.find(x=>x.id===b?.itemId)?.nama||b?.itemId}"`);
   saveLS();render();toast('Booking dihapus');
 }
 window.hapusBooking=hapusBooking;
@@ -408,15 +466,21 @@ function cekStok(){
     </table>`;
 }
 
-function addLabel(type,val){val=val.trim().toUpperCase();if(!val)return;if(state[type].some(x=>x.toUpperCase()===val)){toast('Sudah ada',true);return}state[type].push(val);saveLS();render()}
+function addLabel(type,val){val=val.trim().toUpperCase();if(!val)return;if(state[type].some(x=>x.toUpperCase()===val)){toast('Sudah ada',true);return}state[type].push(val);log('label-add',`Tambah label ${type} "${val}"`);saveLS();render()}
 window.addLabel=addLabel;
-function rmLabel(type,val){if(!confirm(`Hapus "${val}"? Item yang memakainya tidak dihapus.`))return;state[type]=state[type].filter(x=>x!==val);saveLS();render()}
+function rmLabel(type,val){if(!confirm(`Hapus "${val}"? Item yang memakainya tidak dihapus.`))return;state[type]=state[type].filter(x=>x!==val);log('label-del',`Hapus label ${type} "${val}"`);saveLS();render()}
 window.rmLabel=rmLabel;
 
 function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  ['inv','book','stock'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
+  ['inv','book','stock','log'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
   if(name==='stock'){document.getElementById('sDari').value=today();if(!document.getElementById('sSampai').value)document.getElementById('sSampai').value=today();}
+  if(name==='log'){
+    const d=new Date();d.setDate(d.getDate()-6);
+    if(!document.getElementById('repDari').value)document.getElementById('repDari').value=d.toISOString().slice(0,10);
+    if(!document.getElementById('repSampai').value)document.getElementById('repSampai').value=today();
+    genReport();
+  }
 }
 window.switchTab=switchTab;
 
@@ -437,6 +501,7 @@ async function init(){
   state.kategori=loadLS(LS_KAT,DEFAULT_KATEGORI.slice());
   state.kondisi=loadLS(LS_KON,DEFAULT_KONDISI.slice());
   state.bookings=loadLS(LS_BK,[]);
+  state.log=loadLS(LS_LOG,[]);
 
   document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
   document.getElementById('q').addEventListener('input',e=>{state.filter.q=e.target.value;render()});
@@ -472,13 +537,14 @@ async function init(){
     if(!state.kategori.some(x=>x.toUpperCase()===kategori.toUpperCase()))state.kategori.push(kategori);
     if(kondisi&&!state.kondisi.some(x=>x.toUpperCase()===kondisi.toUpperCase()))state.kondisi.push(kondisi);
     const rec={id,nama,kategori,foto,kondisi,qty,harga,keterangan};
-    if(state.editingId){const i=state.items.findIndex(x=>x.id===state.editingId);state.items[i]=rec;toast('Perubahan disimpan')}
-    else{state.items.push(rec);toast('Item ditambahkan')}
+    if(state.editingId){const i=state.items.findIndex(x=>x.id===state.editingId);state.items[i]=rec;log('item-edit',`Edit item "${nama}" (${id})`);toast('Perubahan disimpan')}
+    else{state.items.push(rec);log('item-add',`Tambah item "${nama}" (${id}) kategori=${kategori} kondisi=${kondisi||'-'}`);toast('Item ditambahkan')}
     saveLS();render();document.getElementById('formSec').classList.remove('active');
   });
 
   document.getElementById('btnExport').addEventListener('click',()=>{
     const payload={_meta:{app:'ppm1-inventaris',exported:new Date().toISOString(),kategori:state.kategori,kondisi:state.kondisi},items:state.items,bookings:state.bookings};
+    log('export',`Export ${state.items.length} item + ${state.bookings.length} booking`);saveLS();
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
     a.download=`ppm1-${new Date().toISOString().slice(0,10)}.json`;a.click();toast('Export: items + bookings + label');
   });
@@ -489,6 +555,7 @@ async function init(){
       let p=JSON.parse(await f.text());
       if(Array.isArray(p)){state.items=p}
       else{state.items=p.items||[];if(p.kategori)state.kategori=p.kategori;if(p.kondisi)state.kondisi=p.kondisi;state.bookings=p.bookings||[]}
+      log('import',`Impor ${state.items.length} item + ${state.bookings.length} booking dari file`);
       saveLS();render();toast('Impor: '+state.items.length+' item, '+state.bookings.length+' booking');
     }catch(err){toast('File tidak valid',true)}
   });
@@ -501,8 +568,51 @@ async function init(){
   document.getElementById('btnBook').addEventListener('click',addBooking);
   document.getElementById('btnCek').addEventListener('click',cekStok);
 
+  // Log & Laporan
+  document.getElementById('logType').addEventListener('change',e=>{state.logTypeFilter=e.target.value;logRender()});
+  document.getElementById('btnClearLog').addEventListener('click',()=>{if(!confirm('Kosongkan log?'))return;state.log=[];log('export','Log dikosongkan manual');saveLS();logRender();toast('Log dikosongkan')});
+  document.getElementById('btnExportLog').addEventListener('click',()=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(state.log,null,2)],{type:'application/json'}));
+    a.download=`ppm1-log-${today()}.json`;a.click();
+    log('export','Export log');saveLS();toast('Log di-export');
+  });
+  document.getElementById('btnReport').addEventListener('click',genReport);
+
   saveLS();render();
 }
+function genReport(){
+  const dari=document.getElementById('repDari').value||today();
+  const sampai=document.getElementById('repSampai').value||dari;
+  const active=state.bookings.filter(b=>b.status==='AKTIF');
+  const itemById=Object.fromEntries(state.items.map(i=>[i.id,i]));
+  const totalRevenue=active.reduce((s,b)=>s+(+b.harga||0)*(+b.qty||0),0);
+  const rusak=state.items.filter(i=>i.kondisi==='RUSAK').length;
+  const hilang=state.items.filter(i=>i.kondisi==='HILANG').length;
+  const perbaiki=state.items.filter(i=>i.kondisi==='PERBAIKAN').length;
+  const topBookings=[...active].sort((a,b)=>(b.harga||0)*(b.qty||0)-(a.harga||0)*(a.qty||0)).slice(0,5);
+  const logRange=state.log.filter(l=>l.t.slice(0,10)>=dari&&l.t.slice(0,10)<=sampai);
+  document.getElementById('repResult').innerHTML=`
+    <div class="stats" style="padding:0;margin-bottom:1rem">
+      <div class="stat"><div class="num">${active.length}</div><div class="lbl">Booking Aktif</div></div>
+      <div class="stat"><div class="num">${fmtRp(totalRevenue)}</div><div class="lbl">Perkiraan Omzet</div></div>
+      <div class="stat"><div class="num">${rusak}</div><div class="lbl">Item Rusak</div></div>
+      <div class="stat"><div class="num">${hilang}</div><div class="lbl">Item Hilang</div></div>
+      <div class="stat"><div class="num">${perbaiki}</div><div class="lbl">Dalam Perbaikan</div></div>
+      <div class="stat"><div class="num">${logRange.length}</div><div class="lbl">Aktivitas Rentang</div></div>
+    </div>
+    <h4 style="margin:.5rem 0 .5rem">🔥 5 Booking Terbesar (harga×qty)</h4>
+    <table style="margin:0;background:transparent">
+      <thead><tr><th>Item</th><th>Pelanggan</th><th>Dari → Ke</th><th>Qty</th><th>Subtotal</th></tr></thead>
+      <tbody>${topBookings.map(b=>`<tr><td>${esc(itemById[b.itemId]?.nama||b.itemId)}</td><td>${esc(b.pelanggan||'')}</td><td style="white-space:nowrap">${esc(b.tanggalPinjam||'')} → ${esc(b.tanggalKembali||'')}</td><td>${b.qty||1}</td><td>${fmtRp((+b.harga||0)*(+b.qty||0))}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--muted)">Belum ada booking aktif.</td></tr>'}</tbody>
+    </table>
+    <h4 style="margin:1rem 0 .5rem">📋 Aktivitas ${esc(dari)} – ${esc(sampai)} (${logRange.length} entri)</h4>
+    <table style="margin:0;background:transparent">
+      <thead><tr><th>Waktu</th><th>Jenis</th><th>Rincian</th></tr></thead>
+      <tbody>${logRange.slice(0,50).map(l=>`<tr><td style="white-space:nowrap;font-family:monospace;font-size:.75rem">${new Date(l.t).toLocaleString('id-ID')}</td><td><span class="pill info">${esc(l.type)}</span></td><td style="font-size:.82rem">${esc(l.detail)}</td></tr>`).join('')||'<tr><td colspan="3" style="color:var(--muted)">Tidak ada aktivitas pada rentang ini.</td></tr>'}</tbody>
+    </table>`;
+}
+window.genReport=genReport;
 init();
 </script>
 </body>
