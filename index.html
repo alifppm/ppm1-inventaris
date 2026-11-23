@@ -31,6 +31,7 @@ tr:hover td{background:#243247}
 .pill{display:inline-block;padding:.15rem .55rem;border-radius:99px;font-size:.75rem;font-weight:600}
 .pill.ok{background:#14532d;color:#86efac}
 .pill.warn{background:#450a0a;color:#fca5a5}
+.pill.info{background:#1e3a8a;color:#93c5fd}
 .img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#0f172a}
 .img-placeholder{width:56px;height:56px;border-radius:8px;background:#334155;display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--muted)}
 .actions button{margin-right:.3rem;padding:.35rem .55rem;font-size:.75rem}
@@ -44,8 +45,21 @@ tr:hover td{background:#243247}
 .toast.show{display:block}
 .toast.error{background:#7f1d1d}
 footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)}
-.search-count{color:var(--muted);font-size:.85rem;margin-left:auto}
-@media(max-width:600px){.toolbar{padding:1rem}.stats{padding:0 1rem 1rem}.form-section{margin:0 1rem 1rem}th,td{padding:.55rem;font-size:.8rem}}
+/* panel kelola */
+.manage{background:var(--card);margin:0 1.5rem 1rem;padding:1rem;border-radius:10px;display:none}
+.manage.active{display:block}
+.manage h3{margin:.2rem 0 .8rem}
+.manage-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.box{background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:.8rem}
+.box h4{margin:0 0 .6rem;font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.taglist{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+.tag{display:inline-flex;align-items:center;gap:.4rem;background:#1e3a8a;color:#dbeafe;padding:.25rem .55rem;border-radius:99px;font-size:.8rem}
+.tag button{background:transparent;border:0;color:#fca5a5;cursor:pointer;font-size:.9rem;line-height:1;padding:0 .1rem}
+.tag button:hover{color:#fff}
+.addrow{display:flex;gap:.4rem}
+.addrow input{flex:1;background:#1e293b;border:1px solid var(--border);color:var(--text);padding:.45rem .6rem;border-radius:6px;font-size:.85rem}
+.addrow button{padding:.45rem .7rem}
+@media(max-width:600px){.toolbar{padding:1rem}.stats{padding:0 1rem 1rem}.form-section,.manage{margin:0 1rem 1rem}th,td{padding:.55rem;font-size:.8rem}}
 </style>
 </head>
 <body>
@@ -57,15 +71,36 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
 <div class="toolbar">
   <input type="search" id="q" placeholder="Cari nama barang / id / kategori…">
   <select id="fKategori"><option value="">Semua Kategori</option></select>
-  <select id="fKondisi">
-    <option value="">Semua Kondisi</option>
-    <option>BAIK</option><option>RUSAK</option><option>PERBAIKAN</option>
-  </select>
+  <select id="fKondisi"><option value="">Semua Kondisi</option></select>
+  <button id="btnManage" class="ghost">⚙️ Kelola Kategori & Kondisi</button>
   <button id="btnAdd" style="margin-left:auto">＋ Tambah Item</button>
-  <button class="ghost" id="btnImport">Impor JSON</button>
-  <button class="ghost" id="btnExport">Export JSON</button>
-  <button class="ghost" id="btnReset">Reset dari Seed</button>
+  <button class="ghost" id="btnImport">Impor</button>
+  <button class="ghost" id="btnExport">Export</button>
+  <button class="ghost" id="btnReset">Reset Seed</button>
   <input type="file" id="fileImport" accept=".json" style="display:none">
+</div>
+
+<div class="manage" id="manageSec">
+  <h3>⚙️ Kelola Kategori & Kondisi</h3>
+  <p style="color:var(--muted);font-size:.85rem;margin:0 0 1rem">Tambah atau hapus pilihan. Kategori/kondisi baru langsung bisa dipakai di form input & filter. Menhapus tidak menghapus item yang sudah memakai label itu (item-nya tetap ada, hanya labelnya yang tak lagi tampil di daftar).</p>
+  <div class="manage-cols">
+    <div class="box">
+      <h4>Kategori</h4>
+      <div class="taglist" id="tagKategori"></div>
+      <div class="addrow">
+        <input id="newKategori" placeholder="Kategori baru, mis. SONGKET">
+        <button id="addKategori">＋</button>
+      </div>
+    </div>
+    <div class="box">
+      <h4>Kondisi</h4>
+      <div class="taglist" id="tagKondisi"></div>
+      <div class="addrow">
+        <input id="newKondisi" placeholder="Kondisi baru, mis. SEDANG">
+        <button id="addKondisi">＋</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="stats">
@@ -94,10 +129,10 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
   <h3 id="formTitle">Tambah Item Baru</h3>
   <div class="form-grid">
     <div><label>Nama Barang *</label><input id="fNama" placeholder="Gaun Pengantin Wanita (Merah)"></div>
-    <div><label>ID (hex 8 digit, kosong = auto)</label><input id="fId" placeholder="mis. a1b2c3d4"></div>
-    <div><label>Kategori *</label><input id="fKategori" list="dlKategori" placeholder="UMUM"><datalist id="dlKategori"></datalist></div>
-    <div><label>Foto (path / URL)</label><input id="fFoto" placeholder="Master Barang_Images/xxx.jpg"></div>
-    <div><label>Kondisi *</label><select id="fKondisi"><option>BAIK</option><option>RUSAK</option><option>PERBAIKAN</option></select></div>
+    <div><label>ID (hex 8 digit, kosong = auto)</label><input id="fId" placeholder="otomatis jika kosong"></div>
+    <div><label>Kategori * (pilih / ketik baru)</label><input id="fKategori" list="dlKategori" placeholder="UMUM"><datalist id="dlKategori"></datalist></div>
+    <div><label>Foto (path / URL)</label><input id="fFoto" placeholder="images/xxx.jpg"></div>
+    <div><label>Kondisi * (pilih / ketik baru)</label><input id="fKondisiInp" list="dlKondisi" placeholder="BAIK"><datalist id="dlKondisi"></datalist></div>
     <div><label>Qty *</label><input id="fQty" type="number" min="0" value="1"></div>
   </div>
   <div class="form-actions">
@@ -107,11 +142,22 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
 </div>
 
 <div class="toast" id="toast"></div>
-<footer>Semua data tersimpan di browser (localStorage) • Gratis, tanpa server • <a href="#" id="btnSeedReload" style="color:var(--accent)">Muat ulang data-seed.json</a></footer>
+<footer>Semua data & daftar tersimpan di browser (localStorage) • Gratis, tanpa server • <a href="#" id="btnSeedReload" style="color:var(--accent)">Muat ulang data-seed.json</a></footer>
 
 <script>
-const LS_KEY = 'ppm1_inventory_v1';
-let state = { items: [], sort: {k:'nama', dir:1}, filter: {q:'', kat:'', kon:''}, editingId: null };
+const LS_KEY   = 'ppm1_inventory_v1';
+const LS_KAT   = 'ppm1_kategori_v1';
+const LS_KON   = 'ppm1_kondisi_v1';
+const DEFAULT_KONDISI = ['BAIK','RUSAK','PERBAIKAN'];
+
+let state = {
+  items: [],
+  kategori: [],   // daftar label kategori yang diizinkan
+  kondisi: [],    // daftar label kondisi yang diizinkan
+  sort: {k:'nama', dir:1},
+  filter: {q:'', kat:'', kon:''},
+  editingId: null
+};
 
 function uid(){ return Array.from({length:8},()=> '0123456789abcdef'[Math.floor(Math.random()*16)]).join(''); }
 
@@ -124,8 +170,12 @@ async function loadSeed(){
     return arr;
   }catch(e){ console.warn('seed gagal:', e); return []; }
 }
-function loadLS(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
-function saveLS(){ localStorage.setItem(LS_KEY, JSON.stringify(state.items)); }
+function loadLS(k, def){ try{ const v=JSON.parse(localStorage.getItem(k)); return v??def; }catch{ return def; } }
+function saveLS(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state.items));
+  localStorage.setItem(LS_KAT, JSON.stringify(state.kategori));
+  localStorage.setItem(LS_KON, JSON.stringify(state.kondisi));
+}
 
 function toast(msg, err){
   const t = document.getElementById('toast');
@@ -133,25 +183,50 @@ function toast(msg, err){
   setTimeout(()=> t.className='toast', 3000);
 }
 
-function renderKategoriDl(){
-  const set = new Set(state.items.map(i=>i.kategori).filter(Boolean));
-  document.getElementById('dlKategori').innerHTML = [...set].map(k=>`<option value="${k}">`).join('');
-  const sel = document.getElementById('fKategori');
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">Semua Kategori</option>' + [...set].sort().map(k=>`<option>${k}</option>`).join('');
-  sel.value = prev;
+// Gabung daftar label eksisting di data + daftar yang sudah diizinkan
+function syncLabels(){
+  const usedKat = new Set(state.items.map(i=>i.kategori).filter(Boolean));
+  const usedKon = new Set(state.items.map(i=>i.kondisi).filter(Boolean));
+  state.kategori = [...new Set([...state.kategori, ...usedKat])].sort();
+  state.kondisi  = [...new Set([...state.kondisi,  ...usedKon])].sort();
+}
+
+function renderTags(){
+  document.getElementById('tagKategori').innerHTML =
+    state.kategori.map(k=>`<span class="tag">${k}<button title="Hapus" onclick="rmLabel('kategori','${k.replace(/'/g,"\\'")}')">✕</button></span>`).join('')
+    || '<span style="color:var(--muted);font-size:.8rem">Belum ada</span>';
+  document.getElementById('tagKondisi').innerHTML =
+    state.kondisi.map(k=>`<span class="tag">${k}<button title="Hapus" onclick="rmLabel('kondisi','${k.replace(/'/g,"\\'")}')">✕</button></span>`).join('')
+    || '<span style="color:var(--muted);font-size:.8rem">Belum ada</span>';
+}
+
+function renderDatalists(){
+  document.getElementById('dlKategori').innerHTML = state.kategori.map(k=>`<option value="${k}">`).join('');
+  document.getElementById('dlKondisi').innerHTML  = state.kondisi.map(k=>`<option value="${k}">`).join('');
+}
+
+function renderFilterSelects(){
+  const fK = document.getElementById('fKategori');
+  const prevK = fK.value;
+  fK.innerHTML = '<option value="">Semua Kategori</option>' + state.kategori.map(k=>`<option>${k}</option>`).join('');
+  fK.value = prevK;
+  const fC = document.getElementById('fKondisi');
+  const prevC = fC.value;
+  fC.innerHTML = '<option value="">Semua Kondisi</option>' + state.kondisi.map(k=>`<option>${k}</option>`).join('');
+  fC.value = prevC;
 }
 
 function render(){
-  // stats
   document.getElementById('stTotal').textContent = state.items.length;
   document.getElementById('stQty').textContent = state.items.reduce((s,i)=>s+(+i.qty||0),0);
-  document.getElementById('stKategori').textContent = new Set(state.items.map(i=>i.kategori)).size;
+  document.getElementById('stKategori').textContent = state.kategori.length;
   document.getElementById('stRusak').textContent = state.items.filter(i=>i.kondisi==='RUSAK').length;
 
-  renderKategoriDl();
+  syncLabels();
+  renderTags();
+  renderDatalists();
+  renderFilterSelects();
 
-  // filter
   const q = state.filter.q.toLowerCase();
   let rows = state.items.filter(i=>{
     if(q && !(i.nama||'').toLowerCase().includes(q) && !(i.id||'').toLowerCase().includes(q) && !(i.kategori||'').toLowerCase().includes(q)) return false;
@@ -160,7 +235,6 @@ function render(){
     return true;
   });
 
-  // sort
   rows.sort((a,b)=>{
     const va=a[state.sort.k], vb=b[state.sort.k];
     if(va==vb) return 0;
@@ -168,23 +242,40 @@ function render(){
     return (typeof va==='number'? va-vb : String(va).localeCompare(String(vb))) * state.sort.dir;
   });
 
+  const pillClass = (k)=> k==='BAIK'?'ok': (k==='RUSAK'||k==='RUSAK ')?'warn':'info';
   document.getElementById('tbody').innerHTML = rows.map(i=>`
     <tr>
       <td>${i.foto?`<img class="img" src="${i.foto}" onerror="this.outerHTML='<div class=img-placeholder>📷</div>'" alt="">`:'<div class="img-placeholder">📷</div>'}</td>
       <td style="font-family:monospace;color:var(--muted)">${i.id||'-'}</td>
       <td>${i.nama||''}</td>
-      <td>${i.kategori||''}</td>
-      <td>${i.kondisi?`<span class="pill ${i.kondisi==='BAIK'?'ok':'warn'}">${i.kondisi}</span>`:'<span class="pill">-</span>'}</td>
+      <td>${i.kategori?`<span class="pill info">${i.kategori}</span>`:'-'}</td>
+      <td>${i.kondisi?`<span class="pill ${pillClass(i.kondisi)}">${i.kondisi}</span>`:'<span class="pill">-</span>'}</td>
       <td>${i.qty??0}</td>
       <td class="actions">
         <button onclick="editItem('${i.id}')">✎</button>
         <button class="danger" onclick="delItem('${i.id}')">✕</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Belum ada item. Klik "＋ Tambah Item" atau "Impor JSON".</td></tr>';
+  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Belum ada item. Klik "＋ Tambah Item" atau "Impor".</td></tr>';
 
   document.getElementById('ts').textContent = new Date().toLocaleString('id-ID');
 }
+
+function addLabel(type, val){
+  val = val.trim().toUpperCase();
+  if(!val) return;
+  if(state[type].some(x=>x.toUpperCase()===val)){ toast('Sudah ada', true); return; }
+  state[type].push(val);
+  saveLS(); render();
+}
+window.addLabel = addLabel;
+
+function rmLabel(type, val){
+  if(!confirm(`Hapus "${val}" dari daftar? Item yang sudah memakainya tidak akan dihapus.`)) return;
+  state[type] = state[type].filter(x=>x!==val);
+  saveLS(); render();
+}
+window.rmLabel = rmLabel;
 
 function editItem(id){
   const it = state.items.find(x=>x.id===id); if(!it) return;
@@ -194,7 +285,7 @@ function editItem(id){
   document.getElementById('fId').value = it.id||'';
   document.getElementById('fKategori').value = it.kategori||'';
   document.getElementById('fFoto').value = it.foto||'';
-  document.getElementById('fKondisi').value = it.kondisi||'BAIK';
+  document.getElementById('fKondisiInp').value = it.kondisi||'';
   document.getElementById('fQty').value = it.qty??1;
   document.getElementById('formSec').classList.add('active');
   document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
@@ -210,17 +301,18 @@ function delItem(id){
 window.delItem = delItem;
 
 async function init(){
-  // 1. load seed
   const seed = await loadSeed();
-  if(seed.length){ state.items = seed; saveLS(); }
-  else { state.items = loadLS(); }
-  document.getElementById('fId').placeholder = 'otomatis jika kosong';
+  if(seed.length){ state.items = seed; }
+  else { state.items = loadLS(LS_KEY, []); }
+  state.kategori = loadLS(LS_KAT, []);
+  state.kondisi  = loadLS(LS_KON, DEFAULT_KONDISI.slice());
 
-  // 2. events
+  // events filter
   document.getElementById('q').addEventListener('input', e=>{ state.filter.q=e.target.value; render(); });
   document.getElementById('fKategori').addEventListener('change', e=>{ state.filter.kat=e.target.value; render(); });
   document.getElementById('fKondisi').addEventListener('change', e=>{ state.filter.kon=e.target.value; render(); });
 
+  // sort
   document.querySelectorAll('th[data-k]').forEach(th=>{
     th.addEventListener('click',()=>{
       const k = th.dataset.k;
@@ -231,28 +323,46 @@ async function init(){
     });
   });
 
+  // kelola panel
+  document.getElementById('btnManage').addEventListener('click',()=>{
+    document.getElementById('manageSec').classList.toggle('active');
+    if(document.getElementById('manageSec').classList.contains('active'))
+      document.getElementById('manageSec').scrollIntoView({behavior:'smooth'});
+  });
+  document.getElementById('addKategori').addEventListener('click',()=>{
+    addLabel('kategori', document.getElementById('newKategori').value);
+    document.getElementById('newKategori').value='';
+  });
+  document.getElementById('addKondisi').addEventListener('click',()=>{
+    addLabel('kondisi', document.getElementById('newKondisi').value);
+    document.getElementById('newKondisi').value='';
+  });
+  document.getElementById('newKategori').addEventListener('keydown',e=>{ if(e.key==='Enter'){ addLabel('kategori', e.target.value); e.target.value=''; }});
+  document.getElementById('newKondisi').addEventListener('keydown',e=>{ if(e.key==='Enter'){ addLabel('kondisi', e.target.value); e.target.value=''; }});
+
+  // form item
   document.getElementById('btnAdd').addEventListener('click',()=>{
     state.editingId = null;
     document.getElementById('formTitle').textContent = 'Tambah Item Baru';
-    ['fNama','fId','fKategori','fFoto'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('fKondisi').value='BAIK';
+    ['fNama','fId','fKategori','fFoto','fKondisiInp'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('fQty').value='1';
     document.getElementById('formSec').classList.add('active');
     document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
   });
-
   document.getElementById('btnCancelForm').addEventListener('click',()=>{
     document.getElementById('formSec').classList.remove('active');
   });
-
   document.getElementById('btnSave').addEventListener('click',()=>{
     const nama = document.getElementById('fNama').value.trim();
     const id = document.getElementById('fId').value.trim() || uid();
     const kategori = document.getElementById('fKategori').value.trim() || 'UMUM';
     const foto = document.getElementById('fFoto').value.trim();
-    const kondisi = document.getElementById('fKondisi').value;
+    const kondisi = document.getElementById('fKondisiInp').value.trim();
     const qty = Math.max(0, +document.getElementById('fQty').value||0);
     if(!nama){ toast('Nama barang wajib diisi', true); return; }
+    // auto-daftar label baru
+    if(!state.kategori.some(x=>x.toUpperCase()===kategori.toUpperCase())) state.kategori.push(kategori);
+    if(kondisi && !state.kondisi.some(x=>x.toUpperCase()===kondisi.toUpperCase())) state.kondisi.push(kondisi);
     if(state.editingId){
       const idx = state.items.findIndex(x=>x.id===state.editingId);
       state.items[idx] = {...state.items[idx], nama, id, kategori, foto, kondisi, qty};
@@ -264,22 +374,36 @@ async function init(){
     saveLS(); render(); document.getElementById('formSec').classList.remove('active');
   });
 
+  // import/export
   document.getElementById('btnExport').addEventListener('click',()=>{
-    const blob = new Blob([JSON.stringify(state.items,null,2)],{type:'application/json'});
+    const payload = {
+      _meta:{ app:'ppm1-inventaris', exported:new Date().toISOString(), kategori:state.kategori, kondisi:state.kondisi },
+      items: state.items
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `ppm1-inventaris-${new Date().toISOString().slice(0,10)}.json`;
     a.click();
+    toast('Export: items + daftar kategori/kondisi');
   });
 
   document.getElementById('btnImport').addEventListener('click',()=>document.getElementById('fileImport').click());
   document.getElementById('fileImport').addEventListener('change', async e=>{
     const f = e.target.files[0]; if(!f) return;
     try{
-      const arr = JSON.parse(await f.text());
-      if(!Array.isArray(arr)) throw new Error('bukan array');
-      if(!confirm(`Impor ${arr.length} item? Data saat ini (${state.items.length}) akan diganti.`)) return;
-      state.items = arr; saveLS(); render(); toast('Impor berhasil: '+arr.length+' item');
+      let parsed = JSON.parse(await f.text());
+      // dukung format lama (array) & baru (objek dgn items + daftar)
+      if(Array.isArray(parsed)){
+        state.items = parsed;
+        state.kategori = loadLS(LS_KAT, state.kategori);
+        state.kondisi  = loadLS(LS_KON, state.kondisi);
+      }else{
+        state.items = parsed.items||[];
+        if(parsed.kategori) state.kategori = parsed.kategori;
+        if(parsed.kondisi)  state.kondisi = parsed.kondisi;
+      }
+      saveLS(); render(); toast('Impor berhasil: '+state.items.length+' item');
     }catch(err){ toast('File tidak valid: '+err.message, true); }
   });
 
@@ -297,6 +421,7 @@ async function init(){
     else toast('Seed gagal dimuat', true);
   });
 
+  saveLS();
   render();
 }
 init();
