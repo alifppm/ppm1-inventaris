@@ -344,23 +344,46 @@ async function syncToBackend(fn){
   try { await fn() } catch(e){ /* backend error: data tetap aman di localStorage */ }
 }
 
-// Tarik semua data dari backend ke state lokal (setelah login / muat awal).
-// Backend jadi sumber data utama; localStorage hanya cache offline.
+// ===== Sinkronisasi data: lokal + server, gabungan (union), tidak ada yang hilang =====
+// Lokal = cache terakhir; server = sumber terpusat. Gabungan keduanya = data penuh.
+function unionBy(arr, keyFn){
+  const m = new Map();
+  for(const x of arr){ const k = keyFn(x); if(k && !m.has(k)) m.set(k, x); }
+  return [...m.values()];
+}
+
+// Tarik dari backend, gabung dengan lokal (LOKAL JANGAN PERNAH DITIMPA).
 async function syncFromBackend(){
   if(!API_BASE_SET || !state.session){ return }
   try {
-    const [itRes, bkRes, katRes, konRes, lgRes] = await Promise.all([
+    const [itRes, bkRes, katRes, konRes] = await Promise.all([
       api('items',{},'GET'), api('bookings',{},'GET'),
-      api('labels',{type:'kategori'},'GET'), api('labels',{type:'kondisi'},'GET'),
-      api('log',{},'GET')
+      api('labels',{type:'kategori'},'GET'), api('labels',{type:'kondisi'},'GET')
     ]);
-    if(itRes.ok && Array.isArray(itRes.data)) state.items = itRes.data;
-    if(bkRes.ok && Array.isArray(bkRes.data)) state.bookings = bkRes.data;
-    if(katRes.ok && Array.isArray(katRes.data) && katRes.data.length) state.kategori = katRes.data;
-    if(konRes.ok && Array.isArray(konRes.data) && konRes.data.length) state.kondisi = konRes.data;
-    if(lgRes.ok && Array.isArray(lgRes.data)) state.log = lgRes.data.slice(-200);
+    if(itRes.ok && Array.isArray(itRes.data))
+      state.items = unionBy([...state.items, ...itRes.data], x=>x.id);
+    if(bkRes.ok && Array.isArray(bkRes.data))
+      state.bookings = unionBy([...state.bookings, ...bkRes.data], x=>x.id);
+    if(katRes.ok && Array.isArray(katRes.data))
+      state.kategori = [...new Set([...state.kategori, ...katRes.data])];
+    if(konRes.ok && Array.isArray(konRes.data))
+      state.kondisi = [...new Set([...state.kondisi, ...konRes.data])];
     saveLS();
+    // Kirim data lokal yang belum ada di server (upload)
+    pushLocalToBackend();
   } catch(e){ /* offline: pakai cache lokal */ }
+}
+
+// Kirim semua data lokal ke backend (upload). Dipanggil setelah syncFromBackend.
+function pushLocalToBackend(){
+  if(!API_BASE_SET || !state.session) return;
+  // Item: upload semua (idempotent — saveItem pakai upsert)
+  state.items.forEach(item=>{ syncToBackend(async()=>await api('item-save',{item})) });
+  // Booking: upload semua aktif
+  state.bookings.filter(b=>b.status!=='SELESAI').forEach(b=>{ syncToBackend(async()=>await api('booking-save',{b})) });
+  // Labels
+  state.kategori.forEach(l=>syncToBackend(async()=>await api('label-add',{jenis:'kategori',label:l})));
+  state.kondisi.forEach(l=>syncToBackend(async()=>await api('label-add',{jenis:'kondisi',label:l})));
 }
 
 const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1', LS_LOG='ppm1_log_v1', LS_SES='ppm1_session_v1', LS_ROLE='ppm1_role_v1';
