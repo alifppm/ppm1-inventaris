@@ -291,6 +291,40 @@ async function api(action, body, method='POST') {
   }
 }
 
+// ===== Kontrol ROLE + sinkronisasi ke backend =====
+// editor = editor/admin, admin = admin saja. viewer/tamu = read-only.
+function canEdit(){ return state.role==='admin'||state.role==='editor' }
+function canAdmin(){ return state.role==='admin' }
+// Guard: tolak aksi tulis kalau role tidak izinkan
+function requireEdit(){ if(!canEdit()){ toast('Hanya editor/admin yang boleh', true); return false } return true }
+function requireAdmin(){ if(!canAdmin()){ toast('Hanya admin yang boleh', true); return false } return true }
+
+// Sinkronisasi lokal <-> backend: tulis ke localStorage LALU ke server.
+// Kalau backend aktif (login), perubahan juga disimpan di Google Sheet.
+async function syncToBackend(fn){
+  if(!API_BASE_SET || !state.session){ return } // mode offline/tamu: lokal saja
+  try { await fn() } catch(e){ /* backend error: data tetap aman di localStorage */ }
+}
+
+// Tarik semua data dari backend ke state lokal (setelah login / muat awal).
+// Backend jadi sumber data utama; localStorage hanya cache offline.
+async function syncFromBackend(){
+  if(!API_BASE_SET || !state.session){ return }
+  try {
+    const [itRes, bkRes, katRes, konRes, lgRes] = await Promise.all([
+      api('items',{},'GET'), api('bookings',{},'GET'),
+      api('labels',{type:'kategori'},'GET'), api('labels',{type:'kondisi'},'GET'),
+      api('log',{},'GET')
+    ]);
+    if(itRes.ok && Array.isArray(itRes.data)) state.items = itRes.data;
+    if(bkRes.ok && Array.isArray(bkRes.data)) state.bookings = bkRes.data;
+    if(katRes.ok && Array.isArray(katRes.data) && katRes.data.length) state.kategori = katRes.data;
+    if(konRes.ok && Array.isArray(konRes.data) && konRes.data.length) state.kondisi = konRes.data;
+    if(lgRes.ok && Array.isArray(lgRes.data)) state.log = lgRes.data.slice(-200);
+    saveLS();
+  } catch(e){ /* offline: pakai cache lokal */ }
+}
+
 const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1', LS_LOG='ppm1_log_v1', LS_SES='ppm1_session_v1', LS_ROLE='ppm1_role_v1';
 const DEFAULT_KONDISI=['BAIK','RUSAK','PERBAIKAN','HILANG'];
 const DEFAULT_KATEGORI=['UMUM','TANJAK RUMPAK','SONGKET SELENDANG'];
@@ -363,7 +397,27 @@ function kondisiPillClass(k){
 }
 function fmtRp(n){n=+n||0;return n?'Rp '+n.toLocaleString('id-ID'):''}
 
+// Sembunyikan tombol tulis untuk role viewer/tamu; tampilkan badge read-only.
+function updateToolbarRole(){
+  const hide=!canEdit();
+  ['btnAdd','btnImport','btnManage','btnReset'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display=hide?'none':'';
+  });
+  let badge=document.getElementById('roBadge');
+  if(hide){
+    if(!badge){badge=document.createElement('span');badge.id='roBadge';
+      badge.className='pill';badge.style.cssText='background:#475569;color:#e2e8f0;margin-left:.5rem';
+      badge.textContent='🔒 Mode baca (tamu)';
+      const hdr=document.getElementById('stTotal')?.parentElement?.parentElement;
+      const tb=document.querySelector('#tab-item .toolbar')||document.querySelector('.toolbar');
+      if(tb)tb.insertBefore(badge, tb.querySelector('#btnAdd')||null);
+    }
+    badge.style.display='';
+  } else if(badge) badge.style.display='none';
+}
+
 function render(){
+  updateToolbarRole();
   document.getElementById('stTotal').textContent=state.items.length;
   document.getElementById('stQty').textContent=state.items.reduce((s,i)=>s+(+i.qty||0),0);
   document.getElementById('stRusak').textContent=state.items.filter(i=>i.kondisi==='RUSAK').length;
@@ -392,9 +446,9 @@ function render(){
       <td style="white-space:nowrap">${i.harga?fmtRp(i.harga):'-'}</td>
       <td style="max-width:180px;font-size:.78rem;color:var(--muted)">${i.keterangan?esc(i.keterangan):'-'}</td>
       <td class="actions" style="white-space:nowrap">
-        <button class="sm" onclick="editItem('${esc(i.id)}')" title="Edit item">✎</button>
-        <button class="sm" onclick="bookFromItem('${esc(i.id)}')" title="Booking item ini">📅</button>
-        <button class="sm danger" onclick="delItem('${esc(i.id)}')" title="Hapus">✕</button>
+        ${canEdit()?`<button class="sm" onclick="editItem('${esc(i.id)}')" title="Edit item">✎</button>`:''}
+        ${canEdit()?`<button class="sm" onclick="bookFromItem('${esc(i.id)}')" title="Booking item ini">📅</button>`:''}
+        ${canEdit()?`<button class="sm danger" onclick="delItem('${esc(i.id)}')" title="Hapus">✕</button>`:''}
       </td>
     </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem">Belum ada item. Klik "＋ Item" atau "Impor".</td></tr>';
 
@@ -416,10 +470,10 @@ function renderBookings(){
         <span class="pill ${b.status==='AKTIF'?'disewa':'tersedia'}">${esc(b.status)}</span></div>
       <div class="meta">👤 ${esc(b.pelanggan||'')} • qty ${total} / stok ${stok}${overload?' <strong style="color:#fca5a5">⚠ melebihi stok</strong>':''}${b.harga?' • '+fmtRp(b.harga*total):''}</div>
       ${b.catatan?`<div class="note">📝 ${esc(b.catatan)}</div>`:''}
-      <div style="margin-top:.5rem;display:flex;gap:.4rem">
+      ${canEdit()?`<div style="margin-top:.5rem;display:flex;gap:.4rem">
         <button class="sm" onclick="selesaiBooking('${esc(b.id)}')">✓ Pulang</button>
         <button class="sm danger" onclick="hapusBooking('${esc(b.id)}')">✕ Hapus</button>
-      </div>
+      </div>`:''}
     </div>`;
   }).join(''):'<div style="color:var(--muted);text-align:center;padding:1rem">Belum ada booking aktif. Tambah lewat form di atas.</div>';
 }
@@ -442,13 +496,14 @@ function editItem(id){
 window.editItem=editItem;
 
 function delItem(id){
+  if(!requireEdit())return;
   const it=state.items.find(x=>x.id===id);
   if(!confirm(`Hapus "${it?.nama}"? Booking terkait juga dihapus.`))return;
   const nBk=state.bookings.filter(b=>b.itemId===id).length;
   state.items=state.items.filter(x=>x.id!==id);
   state.bookings=state.bookings.filter(b=>b.itemId!==id);
   log('item-del',`Hapus item "${it?.nama}" + ${nBk} booking terkait`);
-  saveLS();render();toast('Item & bookingnya dihapus');
+  saveLS();syncToBackend(async()=>await api('item-delete',{id}));render();toast('Item & bookingnya dihapus');
 }
 window.delItem=delItem;
 
@@ -462,6 +517,7 @@ function bookFromItem(id){
 window.bookFromItem=bookFromItem;
 
 function addBooking(){
+  if(!requireEdit())return;
   const itemId=document.getElementById('bItemId').value;
   const tgl=document.getElementById('bDate').value;
   const nama=document.getElementById('bNama').value.trim();
@@ -474,22 +530,25 @@ function addBooking(){
   const it=state.items.find(x=>x.id===itemId);
   if(qty>(+it?.qty||0)){toast(`Qty ${qty} melebihi stok ${it?.qty}`,true);return}
   state.bookings.push({id:uid(),itemId,tanggalPinjam:tgl,tanggalKembali:kembali,pelanggan:nama,qty,status:'AKTIF',catatan:cat,harga:+it?.harga||0});
+  const nb=state.bookings[state.bookings.length-1];
   log('booking-add',`Booking "${it?.nama}" utk ${nama}, ${tgl}→${kembali||'?'} x${qty}`);
-  saveLS();render();toast('Booking dibuat');
+  saveLS();syncToBackend(async()=>await api('booking-add',nb));render();toast('Booking dibuat');
 }
 function selesaiBooking(id){
+  if(!requireEdit())return;
   const b=state.bookings.find(x=>x.id===id);if(!b)return;
   b.status='SELESAI';b.tanggalSelesai=today();
   log('booking-done',`Booking "${b.pelanggan}" — item "${(state.items.find(x=>x.id===b.itemId)?.name||b.itemId)}" ditutup ${today()}`);
-  saveLS();render();toast('Peminjaman ditutup');
+  saveLS();syncToBackend(async()=>await api('booking-done',{id}));render();toast('Peminjaman ditutup');
 }
 window.selesaiBooking=selesaiBooking;
 function hapusBooking(id){
+  if(!requireEdit())return;
   if(!confirm('Hapus booking ini?'))return;
   const b=state.bookings.find(x=>x.id===id);
   state.bookings=state.bookings.filter(b=>b.id!==id);
   log('booking-del',`Hapus booking "${b?.pelanggan}" — item "${state.items.find(x=>x.id===b?.itemId)?.nama||b?.itemId}"`);
-  saveLS();render();toast('Booking dihapus');
+  saveLS();syncToBackend(async()=>await api('booking-delete',{id}));render();toast('Booking dihapus');
 }
 window.hapusBooking=hapusBooking;
 
@@ -519,9 +578,9 @@ function cekStok(){
     </table>`;
 }
 
-function addLabel(type,val){val=val.trim().toUpperCase();if(!val)return;if(state[type].some(x=>x.toUpperCase()===val)){toast('Sudah ada',true);return}state[type].push(val);log('label-add',`Tambah label ${type} "${val}"`);saveLS();render()}
+function addLabel(type,val){if(!requireEdit())return;val=val.trim().toUpperCase();if(!val)return;if(state[type].some(x=>x.toUpperCase()===val)){toast('Sudah ada',true);return}state[type].push(val);log('label-add',`Tambah label ${type} "${val}"`);saveLS();syncToBackend(async()=>await api('label-add',{type,label:val}));render()}
 window.addLabel=addLabel;
-function rmLabel(type,val){if(!confirm(`Hapus "${val}"? Item yang memakainya tidak dihapus.`))return;state[type]=state[type].filter(x=>x!==val);log('label-del',`Hapus label ${type} "${val}"`);saveLS();render()}
+function rmLabel(type,val){if(!requireEdit())return;if(!confirm(`Hapus "${val}"? Item yang memakainya tidak dihapus.`))return;state[type]=state[type].filter(x=>x!==val);log('label-del',`Hapus label ${type} "${val}"`);saveLS();syncToBackend(async()=>await api('label-delete',{type,label:val}));render()}
 window.rmLabel=rmLabel;
 
 function switchTab(name){
@@ -577,7 +636,8 @@ async function init(){
     document.getElementById('formSec').classList.add('active');document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
   });
   document.getElementById('btnCancelForm').addEventListener('click',()=>document.getElementById('formSec').classList.remove('active'));
-  document.getElementById('btnSave').addEventListener('click',()=>{
+  document.getElementById('btnSave').addEventListener('click',async()=>{
+    if(!requireEdit())return;
     const nama=document.getElementById('fNama').value.trim();
     const id=document.getElementById('fId').value.trim()||uid();
     const kategori=document.getElementById('fKategoriI').value.trim()||'UMUM';
@@ -592,7 +652,7 @@ async function init(){
     const rec={id,nama,kategori,foto,kondisi,qty,harga,keterangan};
     if(state.editingId){const i=state.items.findIndex(x=>x.id===state.editingId);state.items[i]=rec;log('item-edit',`Edit item "${nama}" (${id})`);toast('Perubahan disimpan')}
     else{state.items.push(rec);log('item-add',`Tambah item "${nama}" (${id}) kategori=${kategori} kondisi=${kondisi||'-'}`);toast('Item ditambahkan')}
-    saveLS();render();document.getElementById('formSec').classList.remove('active');
+    saveLS();syncToBackend(async()=>await api('item-save',{item:rec}));render();document.getElementById('formSec').classList.remove('active');
   });
 
   document.getElementById('btnExport').addEventListener('click',()=>{
@@ -686,6 +746,7 @@ document.addEventListener('DOMContentLoaded', function(){
       state.session=r.session;state.role=r.role;state.nama=r.nama||u;
       localStorage.setItem(LS_SES,JSON.stringify({session:r.session,username:u,role:r.role,nama:r.nama}));
       ov.style.display='none';showApp();showUserMeta();toast('Selamat datang '+esc(r.nama||u));
+      syncFromBackend().then(render);
     }catch(e){document.getElementById('luError').textContent='Gagal terhubung backend (API_BASE belum diset?)'}
   }
   function logout(){
@@ -708,6 +769,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(r.ok&&r.user&&r.user.username===sess.username){
         state.session=sess.session;state.role=r.user.role;state.nama=r.user.nama;
         ov.style.display='none';showApp();showUserMeta();
+        syncFromBackend().then(render);
       } else { showLogin(); }
     }).catch(()=>{ showLogin(); });
   } else {
