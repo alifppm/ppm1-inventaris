@@ -68,9 +68,57 @@ Website: **https://alifppm.github.io/ppm1-inventaris/**
 | Pelanggan kembalikan, kondisi beda | Booking → ✓ Pulang + edit item kondisi/keterangan sesuai |
 | Stok 3, 2 terbook, mau booking 2 lagi | Cek Stok: hari itu sisa=1 → booking 2 ditolak |
 
-## Batas Fase 1
-- Data **per browser** (localStorage). Belum sync antar perangkat secara real-time.
-- Foto harus di-commit ke GitHub (bisa dari web UI, gratis).
-- Belum ada log "siapa mengubah apa" (riwayat audit).
+## ✅ Fitur Baru Fase 1b (Log & Laporan)
 
-**Fase 2** (bila sudah terbukti lancar) upgrade ke **Google Apps Script** sebagai backend: semua tim satu sumber data real-time, tetap gratis.
+**Tab 📋 Log & Laporan** — klik tab ini untuk melihat:
+
+### 1. Log Aktivitas (Audit Trail)
+Setiap aksi tercatat otomatis:
+- `item-add`, `item-edit`, `item-del` — item dibuat/diubah/dihapus
+- `booking-add`, `booking-done`, `booking-del` — booking dibuat/ditutup/dihapus
+- `label-add`, `label-del` — label kategori/kondisi ditambah/dihapus
+- `import`, `export` — data di-impor/ekspor
+
+**Fitur log:**
+- Filter per jenis (dropdown "Semua Jenis")
+- Batas 500 entri terakhir (anti-bengkak)
+- **🧹 Kosongkan Log** — hapus manual
+- **⬇ Export Log** — simpan sebagai JSON (backup / kirim ke tim)
+
+### 2. Laporan Mingguan
+Buka tab Log → isi **Mulai** & **Selesai** (default: 7 hari terakhir) → **📊 Tampilkan**.
+
+Konten laporan:
+| Card | Isi |
+|---|---|
+| Booking Aktif | Jumlah booking status AKTIF |
+| Perkiraan Omzet | Σ (harga item × qty booking) |
+| Item Rusak / Hilang / Dalam Perbaikan | Count dari kolom kondisi |
+| Aktivitas Rentang | Jumlah entri log pada rentang tanggal |
+| 🔥 5 Booking Terbesar | Ranking item paling mahal (sub-total) |
+| 📋 Aktivitas Rentang | Daftar 50 entri log terakhir di rentang |
+
+## Simulasi Kejadian Tak Terduga (Update)
+
+| Kejadian | Cara tangani |
+|---|---|
+| Pelanggan mau 2 item, stok 1 | Booking ditolak |
+| 2 pelanggan mau item sama, tanggal sama | Cek Stok → status "Penuh" |
+| Kebaya sobek saat fitting | Edit item → RUSAK + keterangan |
+| Aksesori hilang | Edit item → HILANG + keterangan |
+| HP mati di lapangan | Data di localStorage; Export → Impor ke perangkat lain |
+| Pelanggan kembalikan, kondisi beda | Booking ✓ Pulang + update item |
+| **Siapa yang mengubah item X kemarin?** | Tab Log → filter `item-edit` → cari waktu |
+| **Berapa omzet minggu ini?** | Tab Log → laporan mingguan → card "Perkiraan Omzet" |
+| **Booking mana yang paling besar?** | Laporan mingguan → "5 Booking Terbesar" |
+| **Item mana yang sedang rusak/hilang?** | Laporan mingguan → card "Item Rusak / Hilang / Dalam Perbaikan" |
+
+## Rekomendasi Langkah Berikutnya
+
+**Pilih salah satu:**
+
+1. **Uji coba 1 minggu dulu** — pakai, upload foto, buat 2-3 booking, cek laporan. Jika ada yang kurang/salah, kita revisi cepat.
+2. **Langsung upgrade ke Fase 2 (Apps Script backend)** — semua tim satu sumber data real-time, tetap gratis. Data tetap bisa ditarik ke Google Sheet Anda.
+3. **Tambah fitur spesifik lagi** — mis. integrasi WhatsApp (kirim reminder otomatis), atau dashboard omzet bulanan di Google Sheet.
+
+Mau yang mana?
