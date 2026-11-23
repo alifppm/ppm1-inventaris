@@ -377,8 +377,20 @@ async function syncFromBackend(){
 // Kirim semua data lokal ke backend (upload). Dipanggil setelah syncFromBackend.
 function pushLocalToBackend(){
   if(!API_BASE_SET || !state.session) return;
-  // Item: upload semua (idempotent — saveItem pakai upsert)
-  state.items.forEach(item=>{ syncToBackend(async()=>await api('item-save',{item})) });
+  // Push items dengan jeda agar Apps Script tidak rate-limit
+  const items = state.items.slice();
+  let idx = 0;
+  function nextItem(){
+    if(idx >= items.length) return;
+    const item = items[idx++];
+    syncToBackend(async()=>{
+      const r = await api('item-save',{item});
+      // Jeda 300ms antar request
+      await new Promise(res=>setTimeout(res,300));
+      nextItem();
+    });
+  }
+  nextItem();
   // Booking: upload semua aktif
   state.bookings.filter(b=>b.status!=='SELESAI').forEach(b=>{ syncToBackend(async()=>await api('booking-save',{b})) });
   // Labels
