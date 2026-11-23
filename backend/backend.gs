@@ -86,16 +86,19 @@ function login(username, password) {
   const calc = hashPassword(password, salt);
   if (calc !== hash) return { ok: false, error: 'Password salah' };
   const session = Utilities.getUuid();
-  // Simpan session di sheet log (atau bisa pakai CacheService)
-  CacheService.getUsersSession().put(session, JSON.stringify({
-    username: uname, role, nama, expires: new Date(Date.now() + CONFIG.SESSION_DAYS * 86400000).toISOString()
+  const cache = CacheService.getSystemCache();
+  cache.put('ppm1_session_' + session, JSON.stringify({
+    username: uname, role, nama,
+    expires: new Date(Date.now() + CONFIG.SESSION_DAYS * 86400000).toISOString()
   }), CONFIG.SESSION_DAYS * 86400);
   log('login', `${nama} (${role}) login`, uname);
   return { ok: true, session, role, nama };
 }
 
 function checkSession(session) {
-  const data = CacheService.getUsersSession().get(session);
+  if (!session) return null;
+  const cache = CacheService.getSystemCache();
+  const data = cache.get('ppm1_session_' + session);
   if (!data) return null;
   const u = JSON.parse(data);
   if (new Date(u.expires) < new Date()) return null;
@@ -103,7 +106,7 @@ function checkSession(session) {
 }
 
 function logout(session) {
-  CacheService.getUsersSession().remove(session);
+  if (session) CacheService.getSystemCache().remove('ppm1_session_' + session);
 }
 
 // ============================================================
