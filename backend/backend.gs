@@ -168,10 +168,10 @@ function logout(session) {
   try {
     const ss = getSS();
     const sh = ss.getSheetByName(SHEET.SESSIONS);
-    if (!sh) return;
+    if (!sh || sh.getLastRow() < 2) return;
     const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues();
     for (let i = 0; i < rows.length; i++) {
-      if (rows[i][0] === session) { sh.deleteRow(i + 2 + (rows.length - i - 1)); break; }
+      if (String(rows[i][0]) === String(session)) { sh.deleteRow(i + 2 + (rows.length - i - 1)); break; }
     }
   } catch (e) {}
 }
@@ -303,9 +303,12 @@ function addLabel(jenis, label, userId) {
   const ss = getSS();
   const sh = ss.getSheetByName(SHEET.LABELS);
   if (!sh) throw new Error('Sheet labels belum ada');
-  // Idempotent: jangan duplikat
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
-  const exists = rows.some(function(r) { return r[0] === jenis && String(r[1]).toUpperCase() === String(label).toUpperCase(); });
+  // Idempotent: jangan duplikat. Handle sheet kosong (getLastRow()===1) dengan aman.
+  var exists = false;
+  if (sh.getLastRow() >= 2) {
+    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+    exists = rows.some(function(r) { return String(r[0]) === jenis && String(r[1]).toUpperCase() === String(label).toUpperCase(); });
+  }
   if (exists) return { ok: true, action: 'already_exists' };
   appendRow(sh, [jenis, label, new Date().toISOString()]);
   log('label-add', 'Tambah ' + jenis + ' "' + label + '"', userId);
@@ -340,6 +343,11 @@ function addUser(username, password, role, nama, byUserId) {
   const ss = getSS();
   const sh = ss.getSheetByName(SHEET.USERS);
   if (!sh) throw new Error('Sheet users belum ada');
+  // Cek duplikat username
+  if (sh.getLastRow() >= 2) {
+    const usernames = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(function(r) { return String(r[0]).trim(); });
+    if (usernames.indexOf(String(username).trim()) >= 0) return { ok: false, error: 'username sudah ada' };
+  }
   const salt = genSalt();
   const hash = hashPassword(password, salt);
   appendRow(sh, [username, hash, salt, role, nama, new Date().toISOString()]);
@@ -361,11 +369,12 @@ function changePassword(username, newPass, byUserId) {
 }
 function removeUser(username, byUserId) {
   if (username === byUserId) throw new Error('Tidak bisa hapus diri sendiri');
+  if (String(username).trim() === 'admin') throw new Error('Tidak bisa hapus akun admin');
   const ss = getSS();
   const sh = ss.getSheetByName(SHEET.USERS);
   if (!sh || sh.getLastRow() < 2) return { ok: false };
-  const usernames = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(function(r) { return String(r[0]); });
-  const idx = usernames.indexOf(username);
+  const usernames = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(function(r) { return String(r[0]).trim(); });
+  const idx = usernames.indexOf(String(username).trim());
   if (idx < 0) return { ok: false };
   sh.deleteRow(idx + 2);
   log('user-del', 'Hapus user "' + username + '"', byUserId);
