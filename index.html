@@ -3,49 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PPM1 — Inventaris Barang</title>
+<title>PPM1 — Inventaris & Booking</title>
 <style>
-:root{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--accent:#f59e0b;--ok:#22c55e;--warn:#ef4444;--border:#334155}
+:root{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--accent:#f59e0b;--ok:#22c55e;--warn:#ef4444;--info:#3b82f6;--border:#334155}
 *{box-sizing:border-box}
 body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 header{background:#1e3a8a;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
 header h1{margin:0;font-size:1.25rem}
 header .meta{font-size:.8rem;color:#cbd5e1}
+.tabs{display:flex;gap:.5rem;padding:1rem 1.5rem 0;flex-wrap:wrap}
+.tab-btn{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.55rem 1rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.9rem}
+.tab-btn.active{background:var(--accent);color:#0f172a}
 .toolbar{display:flex;gap:.5rem;padding:1rem 1.5rem;flex-wrap:wrap;align-items:center}
 .toolbar input,.toolbar select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.55rem .75rem;border-radius:8px;font-size:.9rem;min-width:150px}
 .toolbar input[type=search]{flex:1;min-width:200px}
+.toolbar input[type=date]{min-width:150px}
 button{background:var(--accent);color:#0f172a;border:0;padding:.55rem .9rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem}
 button:hover{filter:brightness(1.1)}
 button.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 button.danger{background:var(--warn)}
+button.sm{padding:.3rem .55rem;font-size:.75rem}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;padding:0 1.5rem 1rem}
 .stat{background:var(--card);border-radius:10px;padding:1rem;text-align:center}
-.stat .num{font-size:1.8rem;font-weight:700;color:var(--accent)}
-.stat .lbl{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.stat .num{font-size:1.6rem;font-weight:700;color:var(--accent)}
+.stat .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.panel{background:var(--card);margin:0 1.5rem 1rem;border-radius:10px;overflow:hidden}
+.panel h3{margin:0;padding:.8rem 1rem;background:#0b1224;font-size:.95rem}
+.panel .body{padding:1rem}
 table{width:100%;border-collapse:collapse;background:var(--card);margin:0 1.5rem 1rem;border-radius:10px;overflow:hidden}
-th,td{padding:.75rem .9rem;text-align:left;border-bottom:1px solid var(--border);font-size:.88rem}
-th{background:#0b1224;cursor:pointer;user-select:none;white-space:nowrap}
+th,td{padding:.65rem .8rem;text-align:left;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:top}
+th{background:#0b1224;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0}
 th:hover{color:var(--accent)}
 th .arr{opacity:.4;font-size:.7rem;margin-left:.25rem}
 tr:hover td{background:#243247}
-.pill{display:inline-block;padding:.15rem .55rem;border-radius:99px;font-size:.75rem;font-weight:600}
+.pill{display:inline-block;padding:.15rem .5rem;border-radius:99px;font-size:.72rem;font-weight:600;white-space:nowrap}
 .pill.ok{background:#14532d;color:#86efac}
 .pill.warn{background:#450a0a;color:#fca5a5}
 .pill.info{background:#1e3a8a;color:#93c5fd}
-.img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#0f172a}
-.img-placeholder{width:56px;height:56px;border-radius:8px;background:#334155;display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--muted)}
-.actions button{margin-right:.3rem;padding:.35rem .55rem;font-size:.75rem}
+.pill.hilang{background:#7f1d1d;color:#fecaca}
+.pill.perbaikan{background:#78350f;color:#fde68a}
+.pill.disewa{background:#14532d;color:#4ade80}
+.pill.tersedia{background:#1e3a8a;color:#93c5fd}
+.img{width:64px;height:64px;object-fit:cover;border-radius:8px;background:#0f172a;cursor:pointer}
+.img-thumb{width:40px;height:40px;object-fit:cover;border-radius:6px;background:#0f172a;cursor:pointer}
+.img-placeholder{width:64px;height:64px;border-radius:8px;background:#334155;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--muted);cursor:pointer}
+.img-placeholder.sm{width:40px;height:40px;font-size:1rem}
+.actions button{margin-right:.25rem}
 .form-section{background:var(--card);margin:0 1.5rem 1rem;padding:1rem;border-radius:10px;display:none}
 .form-section.active{display:block}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem}
 .form-grid label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:.3rem}
 .form-grid input,.form-grid select,.form-grid textarea{width:100%;background:#0f172a;border:1px solid var(--border);color:var(--text);padding:.55rem;border-radius:6px;font-size:.9rem}
+.form-grid textarea{resize:vertical;min-height:50px}
 .form-actions{margin-top:.75rem;display:flex;gap:.5rem;justify-content:flex-end}
-.toast{position:fixed;bottom:1rem;right:1rem;background:#166534;color:#fff;padding:.8rem 1.2rem;border-radius:8px;display:none;z-index:99;max-width:320px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.toast{position:fixed;bottom:1rem;right:1rem;background:#166534;color:#fff;padding:.8rem 1.2rem;border-radius:8px;display:none;z-index:99;max-width:340px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 .toast.show{display:block}
 .toast.error{background:#7f1d1d}
+.toast.warn{background:#78350f}
 footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)}
-/* panel kelola */
 .manage{background:var(--card);margin:0 1.5rem 1rem;padding:1rem;border-radius:10px;display:none}
 .manage.active{display:block}
 .manage h3{margin:.2rem 0 .8rem}
@@ -59,370 +74,434 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
 .addrow{display:flex;gap:.4rem}
 .addrow input{flex:1;background:#1e293b;border:1px solid var(--border);color:var(--text);padding:.45rem .6rem;border-radius:6px;font-size:.85rem}
 .addrow button{padding:.45rem .7rem}
-@media(max-width:600px){.toolbar{padding:1rem}.stats{padding:0 1rem 1rem}.form-section,.manage{margin:0 1rem 1rem}th,td{padding:.55rem;font-size:.8rem}}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:200;padding:1rem}
+.lightbox.active{display:flex}
+.lightbox img{max-width:90vw;max-height:85vh;border-radius:12px;object-fit:contain}
+.lightbox .cap{position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);color:#fff;font-size:.9rem}
+.book-card{background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:.8rem;margin-bottom:.6rem}
+.book-card .head{display:flex;justify-content:space-between;font-weight:600;margin-bottom:.3rem;gap:.5rem;flex-wrap:wrap}
+.book-card .meta{font-size:.8rem;color:var(--muted)}
+.book-card .note{font-size:.8rem;color:#fca5a5;margin-top:.3rem;font-style:italic}
+@media(max-width:600px){.toolbar,.stats{padding:1rem}.form-section,.manage,.panel{margin:0 1rem 1rem}table{margin:0 1rem 1rem}th,td{padding:.5rem;font-size:.78rem}.img,.img-placeholder{width:48px;height:48px}}
 </style>
 </head>
 <body>
 <header>
-  <h1>📦 PPM1 — Inventaris Barang</h1>
+  <h1>📦 PPM1 — Inventaris & Booking</h1>
   <div class="meta">Putri Pinang Masak 1 • <span id="ts">-</span></div>
 </header>
 
-<div class="toolbar">
-  <input type="search" id="q" placeholder="Cari nama barang / id / kategori…">
-  <select id="fKategori"><option value="">Semua Kategori</option></select>
-  <select id="fKondisi"><option value="">Semua Kondisi</option></select>
-  <button id="btnManage" class="ghost">⚙️ Kelola Kategori & Kondisi</button>
-  <button id="btnAdd" style="margin-left:auto">＋ Tambah Item</button>
-  <button class="ghost" id="btnImport">Impor</button>
-  <button class="ghost" id="btnExport">Export</button>
-  <button class="ghost" id="btnReset">Reset Seed</button>
-  <input type="file" id="fileImport" accept=".json" style="display:none">
+<div class="tabs">
+  <button class="tab-btn active" data-tab="inv">📦 Inventaris</button>
+  <button class="tab-btn" data-tab="book">📅 Booking</button>
+  <button class="tab-btn" data-tab="stock">🔍 Cek Stok</button>
 </div>
 
-<div class="manage" id="manageSec">
-  <h3>⚙️ Kelola Kategori & Kondisi</h3>
-  <p style="color:var(--muted);font-size:.85rem;margin:0 0 1rem">Tambah atau hapus pilihan. Kategori/kondisi baru langsung bisa dipakai di form input & filter. Menhapus tidak menghapus item yang sudah memakai label itu (item-nya tetap ada, hanya labelnya yang tak lagi tampil di daftar).</p>
-  <div class="manage-cols">
-    <div class="box">
-      <h4>Kategori</h4>
-      <div class="taglist" id="tagKategori"></div>
-      <div class="addrow">
-        <input id="newKategori" placeholder="Kategori baru, mis. SONGKET">
-        <button id="addKategori">＋</button>
+<div id="tab-inv">
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Cari nama / id / kategori / pelanggan…">
+    <select id="fKategori"><option value="">Semua Kategori</option></select>
+    <select id="fKondisi"><option value="">Semua Kondisi</option></select>
+    <button id="btnManage" class="ghost">⚙️ Kelola Label</button>
+    <button id="btnAdd" style="margin-left:auto">＋ Item</button>
+    <button class="ghost" id="btnImport">Impor</button>
+    <button class="ghost" id="btnExport">Export</button>
+    <button class="ghost" id="btnReset">Reset</button>
+    <input type="file" id="fileImport" accept=".json" style="display:none">
+  </div>
+
+  <div class="manage" id="manageSec">
+    <h3>⚙️ Kelola Kategori & Kondisi</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin:0 0 1rem">Tambah/hapus pilihan. Label baru langsung dipakai form & filter. Hapus label tidak menghapus item yang sudah memakainya.</p>
+    <div class="manage-cols">
+      <div class="box">
+        <h4>Kategori</h4>
+        <div class="taglist" id="tagKategori"></div>
+        <div class="addrow"><input id="newKategori" placeholder="mis. SONGKET"><button id="addKategori">＋</button></div>
+      </div>
+      <div class="box">
+        <h4>Kondisi</h4>
+        <div class="taglist" id="tagKondisi"></div>
+        <div class="addrow"><input id="newKondisi" placeholder="mis. HILANG"><button id="addKondisi">＋</button></div>
       </div>
     </div>
-    <div class="box">
-      <h4>Kondisi</h4>
-      <div class="taglist" id="tagKondisi"></div>
-      <div class="addrow">
-        <input id="newKondisi" placeholder="Kondisi baru, mis. SEDANG">
-        <button id="addKondisi">＋</button>
-      </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">Item</div></div>
+    <div class="stat"><div class="num" id="stQty">0</div><div class="lbl">Total Qty</div></div>
+    <div class="stat"><div class="num" id="stRusak">0</div><div class="lbl">Rusak</div></div>
+    <div class="stat"><div class="num" id="stHilang">0</div><div class="lbl">Hilang</div></div>
+    <div class="stat"><div class="num" id="stBook">0</div><div class="lbl">Booking Aktif</div></div>
+  </div>
+
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th data-k="foto">Foto</th>
+        <th data-k="id">ID</th>
+        <th data-k="nama">Nama Barang</th>
+        <th data-k="kategori">Kategori</th>
+        <th data-k="kondisi">Kondisi</th>
+        <th data-k="qty">Qty</th>
+        <th data-k="harga">Harga</th>
+        <th data-k="keterangan">Keterangan</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <div class="form-section" id="formSec">
+    <h3 id="formTitle">Tambah Item Baru</h3>
+    <div class="form-grid">
+      <div><label>Nama Barang *</label><input id="fNama" placeholder="Gaun Pengantin Wanita (Merah)"></div>
+      <div><label>ID (kosong = auto)</label><input id="fId" placeholder="otomatis"></div>
+      <div><label>Kategori *</label><input id="fKategoriI" list="dlKategori" placeholder="UMUM"><datalist id="dlKategori"></datalist></div>
+      <div><label>Foto (path/URL)</label><input id="fFoto" placeholder="images/xxx.jpg"></div>
+      <div><label>Kondisi *</label><input id="fKondisiInp" list="dlKondisi" placeholder="BAIK"><datalist id="dlKondisi"></datalist></div>
+      <div><label>Qty *</label><input id="fQty" type="number" min="0" value="1"></div>
+      <div><label>Harga Sewa (Rp)</label><input id="fHarga" type="number" min="0" placeholder="500000"></div>
+      <div style="grid-column:span 2"><label>Keterangan (kerusakan / catatan)</label><textarea id="fKeterangan" placeholder="mis. sobek di kerah, perlu dijahit"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="ghost" id="btnCancelForm">Batal</button>
+      <button id="btnSave">Simpan</button>
     </div>
   </div>
 </div>
 
-<div class="stats">
-  <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">Total Item</div></div>
-  <div class="stat"><div class="num" id="stQty">0</div><div class="lbl">Total Qty</div></div>
-  <div class="stat"><div class="num" id="stKategori">0</div><div class="lbl">Kategori</div></div>
-  <div class="stat"><div class="num" id="stRusak">0</div><div class="lbl">Kondisi Rusak</div></div>
-</div>
-
-<table id="tbl">
-  <thead>
-    <tr>
-      <th data-k="foto">Foto<span class="arr">↕</span></th>
-      <th data-k="id">ID<span class="arr">↕</span></th>
-      <th data-k="nama">Nama Barang<span class="arr">↕</span></th>
-      <th data-k="kategori">Kategori<span class="arr">↕</span></th>
-      <th data-k="kondisi">Kondisi<span class="arr">↕</span></th>
-      <th data-k="qty">Qty<span class="arr">↕</span></th>
-      <th>Aksi</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
-</table>
-
-<div class="form-section" id="formSec">
-  <h3 id="formTitle">Tambah Item Baru</h3>
-  <div class="form-grid">
-    <div><label>Nama Barang *</label><input id="fNama" placeholder="Gaun Pengantin Wanita (Merah)"></div>
-    <div><label>ID (hex 8 digit, kosong = auto)</label><input id="fId" placeholder="otomatis jika kosong"></div>
-    <div><label>Kategori * (pilih / ketik baru)</label><input id="fKategori" list="dlKategori" placeholder="UMUM"><datalist id="dlKategori"></datalist></div>
-    <div><label>Foto (path / URL)</label><input id="fFoto" placeholder="images/xxx.jpg"></div>
-    <div><label>Kondisi * (pilih / ketik baru)</label><input id="fKondisiInp" list="dlKondisi" placeholder="BAIK"><datalist id="dlKondisi"></datalist></div>
-    <div><label>Qty *</label><input id="fQty" type="number" min="0" value="1"></div>
+<div id="tab-book" style="display:none">
+  <div class="toolbar">
+    <input type="date" id="bDate">
+    <select id="bItemId"><option value="">— pilih item —</option></select>
+    <input id="bNama" placeholder="Nama pelanggan" style="min-width:160px">
+    <input id="bQty" type="number" min="1" value="1" style="min-width:70px" title="Jumlah item">
+    <input id="bKembali" type="date" title="Jadwal kembali">
+    <input id="bCatatan" placeholder="Catatan (opsional)" style="min-width:160px">
+    <button id="btnBook">＋ Booking</button>
   </div>
-  <div class="form-actions">
-    <button class="ghost" id="btnCancelForm">Batal</button>
-    <button id="btnSave">Simpan</button>
+  <div class="panel">
+    <h3>Booking Aktif & Mendatang</h3>
+    <div class="body" id="bookList"></div>
   </div>
 </div>
 
+<div id="tab-stock" style="display:none">
+  <div class="panel">
+    <h3>🔍 Cek Stok Item pada Tanggal Tertentu</h3>
+    <div class="body">
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <div><label>ID / Nama item</label><input id="sItem" list="sItemDL" placeholder="ketik atau pilih"><datalist id="sItemDL"></datalist></div>
+        <div><label>Tanggal mulai</label><input id="sDari" type="date"></div>
+        <div><label>Tanggal selesai</label><input id="sSampai" type="date"></div>
+        <div style="align-self:end"><button id="btnCek" style="width:100%">Cek Ketersediaan</button></div>
+      </div>
+      <div id="stockResult" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></div>
 <div class="toast" id="toast"></div>
-<footer>Semua data & daftar tersimpan di browser (localStorage) • Gratis, tanpa server • <a href="#" id="btnSeedReload" style="color:var(--accent)">Muat ulang data-seed.json</a></footer>
+<footer>localStorage (offline-first) • Gratis • <a href="#" id="btnSeedReload" style="color:var(--accent)">Muat ulang seed</a></footer>
 
 <script>
-const LS_KEY   = 'ppm1_inventory_v1';
-const LS_KAT   = 'ppm1_kategori_v1';
-const LS_KON   = 'ppm1_kondisi_v1';
-const DEFAULT_KONDISI = ['BAIK','RUSAK','PERBAIKAN'];
+const LS_KEY='ppm1_inventory_v1', LS_KAT='ppm1_kategori_v1', LS_KON='ppm1_kondisi_v1', LS_BK='ppm1_booking_v1';
+const DEFAULT_KONDISI=['BAIK','RUSAK','PERBAIKAN','HILANG'];
+const DEFAULT_KATEGORI=['UMUM','TANJAK RUMPAK','SONGKET SELENDANG'];
 
-let state = {
-  items: [],
-  kategori: [],   // daftar label kategori yang diizinkan
-  kondisi: [],    // daftar label kondisi yang diizinkan
-  sort: {k:'nama', dir:1},
-  filter: {q:'', kat:'', kon:''},
-  editingId: null
-};
+let state={items:[],kategori:[],kondisi:[],bookings:[],sort:{k:'nama',dir:1},filter:{q:'',kat:'',kon:''},editingId:null};
 
-function uid(){ return Array.from({length:8},()=> '0123456789abcdef'[Math.floor(Math.random()*16)]).join(''); }
+function uid(){return Array.from({length:8},()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('')}
+function today(){return new Date().toISOString().slice(0,10)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function loadSeed(){try{const r=await fetch('data-seed.json');if(!r.ok)throw 0;const a=await r.json();localStorage.setItem(LS_KEY,JSON.stringify(a));return a}catch{return[]}}
+function loadLS(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v??def}catch{return def}}
+function saveLS(){localStorage.setItem(LS_KEY,JSON.stringify(state.items));localStorage.setItem(LS_KAT,JSON.stringify(state.kategori));localStorage.setItem(LS_KON,JSON.stringify(state.kondisi));localStorage.setItem(LS_BK,JSON.stringify(state.bookings))}
+function toast(m,e,w){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' error':w?' warn':'');setTimeout(()=>t.className='toast',3500)}
 
-async function loadSeed(){
-  try{
-    const r = await fetch('data-seed.json');
-    if(!r.ok) throw new Error(r.status);
-    const arr = await r.json();
-    localStorage.setItem(LS_KEY, JSON.stringify(arr));
-    return arr;
-  }catch(e){ console.warn('seed gagal:', e); return []; }
-}
-function loadLS(k, def){ try{ const v=JSON.parse(localStorage.getItem(k)); return v??def; }catch{ return def; } }
-function saveLS(){
-  localStorage.setItem(LS_KEY, JSON.stringify(state.items));
-  localStorage.setItem(LS_KAT, JSON.stringify(state.kategori));
-  localStorage.setItem(LS_KON, JSON.stringify(state.kondisi));
+function fotoHtml(foto,nama,sm){
+  if(!foto) return `<div class="img-placeholder${sm?' sm':''}" data-foto="" data-nama="${esc(nama)}">📷</div>`;
+  return `<img class="${sm?'img-thumb':'img'}" src="${esc(foto)}" data-foto="${esc(foto)}" data-nama="${esc(nama)}" alt="${esc(nama)}" onerror="this.outerHTML='<div class=img-placeholder${sm?' sm':''}>📷</div>'">`;
 }
 
-function toast(msg, err){
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show' + (err?' error':'');
-  setTimeout(()=> t.className='toast', 3000);
-}
-
-// Gabung daftar label eksisting di data + daftar yang sudah diizinkan
 function syncLabels(){
-  const usedKat = new Set(state.items.map(i=>i.kategori).filter(Boolean));
-  const usedKon = new Set(state.items.map(i=>i.kondisi).filter(Boolean));
-  state.kategori = [...new Set([...state.kategori, ...usedKat])].sort();
-  state.kondisi  = [...new Set([...state.kondisi,  ...usedKon])].sort();
+  const uk=new Set(state.items.map(i=>i.kategori).filter(Boolean));
+  const ukon=new Set(state.items.map(i=>i.kondisi).filter(Boolean));
+  state.kategori=[...new Set([...state.kategori,...uk])].sort();
+  state.kondisi=[...new Set([...state.kondisi,...ukon])].sort();
 }
-
 function renderTags(){
-  document.getElementById('tagKategori').innerHTML =
-    state.kategori.map(k=>`<span class="tag">${k}<button title="Hapus" onclick="rmLabel('kategori','${k.replace(/'/g,"\\'")}')">✕</button></span>`).join('')
-    || '<span style="color:var(--muted);font-size:.8rem">Belum ada</span>';
-  document.getElementById('tagKondisi').innerHTML =
-    state.kondisi.map(k=>`<span class="tag">${k}<button title="Hapus" onclick="rmLabel('kondisi','${k.replace(/'/g,"\\'")}')">✕</button></span>`).join('')
-    || '<span style="color:var(--muted);font-size:.8rem">Belum ada</span>';
+  document.getElementById('tagKategori').innerHTML=state.kategori.map(k=>`<span class="tag">${esc(k)}<button onclick="rmLabel('kategori','${esc(k).replace(/'/g,"\\'")}')">✕</button></span>`).join('')||'<span style="color:var(--muted);font-size:.8rem">Belum ada</span>';
+  document.getElementById('tagKondisi').innerHTML=state.kondisi.map(k=>`<span class="tag">${esc(k)}<button onclick="rmLabel('kondisi','${esc(k).replace(/'/g,"\\'")}')">✕</button></span>`).join('')||'<span style="color:var(--muted);font-size:.8rem">Belum ada</span>';
 }
-
 function renderDatalists(){
-  document.getElementById('dlKategori').innerHTML = state.kategori.map(k=>`<option value="${k}">`).join('');
-  document.getElementById('dlKondisi').innerHTML  = state.kondisi.map(k=>`<option value="${k}">`).join('');
+  document.getElementById('dlKategori').innerHTML=state.kategori.map(k=>`<option value="${esc(k)}">`).join('');
+  document.getElementById('dlKondisi').innerHTML=state.kondisi.map(k=>`<option value="${esc(k)}">`).join('');
+}
+function renderFilterSelects(){
+  const fK=document.getElementById('fKategori');const pK=fK.value;
+  fK.innerHTML='<option value="">Semua Kategori</option>'+state.kategori.map(k=>`<option>${esc(k)}</option>`).join('');fK.value=pK;
+  const fC=document.getElementById('fKondisi');const pC=fC.value;
+  fC.innerHTML='<option value="">Semua Kondisi</option>'+state.kondisi.map(k=>`<option>${esc(k)}</option>`).join('');fC.value=pC;
+  const bI=document.getElementById('bItemId');const pI=bI.value;
+  bI.innerHTML='<option value="">— pilih item —</option>'+state.items.map(i=>`<option value="${esc(i.id)}">${esc(i.nama)}</option>`).join('');bI.value=pI;
+  document.getElementById('sItemDL').innerHTML=state.items.map(i=>`<option value="${esc(i.id)}">${esc(i.nama)}</option>`).join('');
 }
 
-function renderFilterSelects(){
-  const fK = document.getElementById('fKategori');
-  const prevK = fK.value;
-  fK.innerHTML = '<option value="">Semua Kategori</option>' + state.kategori.map(k=>`<option>${k}</option>`).join('');
-  fK.value = prevK;
-  const fC = document.getElementById('fKondisi');
-  const prevC = fC.value;
-  fC.innerHTML = '<option value="">Semua Kondisi</option>' + state.kondisi.map(k=>`<option>${k}</option>`).join('');
-  fC.value = prevC;
+function kondisiPillClass(k){
+  if(k==='BAIK')return'ok';
+  if(k==='RUSAK')return'warn';
+  if(k==='HILANG')return'hilang';
+  if(k==='PERBAIKAN')return'perbaikan';
+  return'info';
 }
+function fmtRp(n){n=+n||0;return n?'Rp '+n.toLocaleString('id-ID'):''}
 
 function render(){
-  document.getElementById('stTotal').textContent = state.items.length;
-  document.getElementById('stQty').textContent = state.items.reduce((s,i)=>s+(+i.qty||0),0);
-  document.getElementById('stKategori').textContent = state.kategori.length;
-  document.getElementById('stRusak').textContent = state.items.filter(i=>i.kondisi==='RUSAK').length;
+  document.getElementById('stTotal').textContent=state.items.length;
+  document.getElementById('stQty').textContent=state.items.reduce((s,i)=>s+(+i.qty||0),0);
+  document.getElementById('stRusak').textContent=state.items.filter(i=>i.kondisi==='RUSAK').length;
+  document.getElementById('stHilang').textContent=state.items.filter(i=>i.kondisi==='HILANG').length;
+  document.getElementById('stBook').textContent=state.bookings.filter(b=>b.status==='AKTIF').length;
+  syncLabels();renderTags();renderDatalists();renderFilterSelects();
 
-  syncLabels();
-  renderTags();
-  renderDatalists();
-  renderFilterSelects();
-
-  const q = state.filter.q.toLowerCase();
-  let rows = state.items.filter(i=>{
+  const q=state.filter.q.toLowerCase();
+  let rows=state.items.filter(i=>{
     if(q && !(i.nama||'').toLowerCase().includes(q) && !(i.id||'').toLowerCase().includes(q) && !(i.kategori||'').toLowerCase().includes(q)) return false;
-    if(state.filter.kat && i.kategori !== state.filter.kat) return false;
-    if(state.filter.kon && i.kondisi !== state.filter.kon) return false;
+    if(state.filter.kat && i.kategori!==state.filter.kat) return false;
+    if(state.filter.kon && i.kondisi!==state.filter.kon) return false;
     return true;
   });
+  rows.sort((a,b)=>{const va=a[state.sort.k],vb=b[state.sort.k];if(va==vb)return 0;if(va==null)return 1;if(vb==null)return -1;return(typeof va==='number'?va-vb:String(va).localeCompare(String(vb)))*state.sort.dir});
 
-  rows.sort((a,b)=>{
-    const va=a[state.sort.k], vb=b[state.sort.k];
-    if(va==vb) return 0;
-    if(va==null) return 1; if(vb==null) return -1;
-    return (typeof va==='number'? va-vb : String(va).localeCompare(String(vb))) * state.sort.dir;
-  });
-
-  const pillClass = (k)=> k==='BAIK'?'ok': (k==='RUSAK'||k==='RUSAK ')?'warn':'info';
-  document.getElementById('tbody').innerHTML = rows.map(i=>`
+  document.getElementById('tbody').innerHTML=rows.map(i=>`
     <tr>
-      <td>${i.foto?`<img class="img" src="${i.foto}" onerror="this.outerHTML='<div class=img-placeholder>📷</div>'" alt="">`:'<div class="img-placeholder">📷</div>'}</td>
-      <td style="font-family:monospace;color:var(--muted)">${i.id||'-'}</td>
-      <td>${i.nama||''}</td>
-      <td>${i.kategori?`<span class="pill info">${i.kategori}</span>`:'-'}</td>
-      <td>${i.kondisi?`<span class="pill ${pillClass(i.kondisi)}">${i.kondisi}</span>`:'<span class="pill">-</span>'}</td>
+      <td>${fotoHtml(i.foto,i.nama)}</td>
+      <td style="font-family:monospace;color:var(--muted);font-size:.78rem">${esc(i.id)}</td>
+      <td><strong>${esc(i.nama)}</strong></td>
+      <td>${i.kategori?`<span class="pill info">${esc(i.kategori)}</span>`:'-'}</td>
+      <td>${i.kondisi?`<span class="pill ${kondisiPillClass(i.kondisi)}">${esc(i.kondisi)}</span>`:'<span class="pill">-</span>'}</td>
       <td>${i.qty??0}</td>
-      <td class="actions">
-        <button onclick="editItem('${i.id}')">✎</button>
-        <button class="danger" onclick="delItem('${i.id}')">✕</button>
+      <td style="white-space:nowrap">${i.harga?fmtRp(i.harga):'-'}</td>
+      <td style="max-width:180px;font-size:.78rem;color:var(--muted)">${i.keterangan?esc(i.keterangan):'-'}</td>
+      <td class="actions" style="white-space:nowrap">
+        <button class="sm" onclick="editItem('${esc(i.id)}')" title="Edit item">✎</button>
+        <button class="sm" onclick="bookFromItem('${esc(i.id)}')" title="Booking item ini">📅</button>
+        <button class="sm danger" onclick="delItem('${esc(i.id)}')" title="Hapus">✕</button>
       </td>
-    </tr>
-  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Belum ada item. Klik "＋ Tambah Item" atau "Impor".</td></tr>';
+    </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem">Belum ada item. Klik "＋ Item" atau "Impor".</td></tr>';
 
-  document.getElementById('ts').textContent = new Date().toLocaleString('id-ID');
+  renderBookings();
+  document.getElementById('ts').textContent=new Date().toLocaleString('id-ID');
 }
 
-function addLabel(type, val){
-  val = val.trim().toUpperCase();
-  if(!val) return;
-  if(state[type].some(x=>x.toUpperCase()===val)){ toast('Sudah ada', true); return; }
-  state[type].push(val);
-  saveLS(); render();
+function renderBookings(){
+  const active=state.bookings.filter(b=>b.status!=='SELESAI').sort((a,b)=>(a.tanggalPinjam||'').localeCompare(b.tanggalPinjam||''));
+  const itemById=Object.fromEntries(state.items.map(i=>[i.id,i]));
+  document.getElementById('bookList').innerHTML=active.length?active.map(b=>{
+    const it=itemById[b.itemId];
+    const nama=it?esc(it.nama):'(item terhapus)';
+    const total=+b.qty||1;
+    const stok=it?+it.qty||0:0;
+    const overload=total>stok;
+    return `<div class="book-card">
+      <div class="head"><span>${esc(b.tanggalPinjam)} → ${esc(b.tanggalKembali)||'?'} &nbsp; ${nama}</span>
+        <span class="pill ${b.status==='AKTIF'?'disewa':'tersedia'}">${esc(b.status)}</span></div>
+      <div class="meta">👤 ${esc(b.pelanggan||'')} • qty ${total} / stok ${stok}${overload?' <strong style="color:#fca5a5">⚠ melebihi stok</strong>':''}${b.harga?' • '+fmtRp(b.harga*total):''}</div>
+      ${b.catatan?`<div class="note">📝 ${esc(b.catatan)}</div>`:''}
+      <div style="margin-top:.5rem;display:flex;gap:.4rem">
+        <button class="sm" onclick="selesaiBooking('${esc(b.id)}')">✓ Pulang</button>
+        <button class="sm danger" onclick="hapusBooking('${esc(b.id)}')">✕ Hapus</button>
+      </div>
+    </div>`;
+  }).join(''):'<div style="color:var(--muted);text-align:center;padding:1rem">Belum ada booking aktif. Tambah lewat form di atas.</div>';
 }
-window.addLabel = addLabel;
-
-function rmLabel(type, val){
-  if(!confirm(`Hapus "${val}" dari daftar? Item yang sudah memakainya tidak akan dihapus.`)) return;
-  state[type] = state[type].filter(x=>x!==val);
-  saveLS(); render();
-}
-window.rmLabel = rmLabel;
 
 function editItem(id){
-  const it = state.items.find(x=>x.id===id); if(!it) return;
-  state.editingId = id;
-  document.getElementById('formTitle').textContent = 'Edit Item: '+it.nama;
-  document.getElementById('fNama').value = it.nama||'';
-  document.getElementById('fId').value = it.id||'';
-  document.getElementById('fKategori').value = it.kategori||'';
-  document.getElementById('fFoto').value = it.foto||'';
-  document.getElementById('fKondisiInp').value = it.kondisi||'';
-  document.getElementById('fQty').value = it.qty??1;
+  const it=state.items.find(x=>x.id===id);if(!it)return;
+  state.editingId=id;
+  document.getElementById('formTitle').textContent='Edit: '+it.nama;
+  document.getElementById('fNama').value=it.nama||'';
+  document.getElementById('fId').value=it.id||'';
+  document.getElementById('fKategoriI').value=it.kategori||'';
+  document.getElementById('fFoto').value=it.foto||'';
+  document.getElementById('fKondisiInp').value=it.kondisi||'';
+  document.getElementById('fQty').value=it.qty??1;
+  document.getElementById('fHarga').value=it.harga??'';
+  document.getElementById('fKeterangan').value=it.keterangan||'';
   document.getElementById('formSec').classList.add('active');
   document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
 }
-window.editItem = editItem;
+window.editItem=editItem;
 
 function delItem(id){
-  const it = state.items.find(x=>x.id===id);
-  if(!confirm(`Hapus "${it?.nama}"?`)) return;
-  state.items = state.items.filter(x=>x.id!==id);
-  saveLS(); render(); toast('Item dihapus');
+  const it=state.items.find(x=>x.id===id);
+  if(!confirm(`Hapus "${it?.nama}"? Booking terkait juga dihapus.`))return;
+  state.items=state.items.filter(x=>x.id!==id);
+  state.bookings=state.bookings.filter(b=>b.itemId!==id);
+  saveLS();render();toast('Item & bookingnya dihapus');
 }
-window.delItem = delItem;
+window.delItem=delItem;
+
+function bookFromItem(id){
+  switchTab('book');
+  document.getElementById('bItemId').value=id;
+  document.getElementById('bDate').value=today();
+  document.getElementById('bQty').value=1;
+  document.getElementById('bNama').focus();
+}
+window.bookFromItem=bookFromItem;
+
+function addBooking(){
+  const itemId=document.getElementById('bItemId').value;
+  const tgl=document.getElementById('bDate').value;
+  const nama=document.getElementById('bNama').value.trim();
+  const qty=+document.getElementById('bQty').value||1;
+  const kembali=document.getElementById('bKembali').value;
+  const cat=document.getElementById('bCatatan').value.trim();
+  if(!itemId){toast('Pilih item',true);return}
+  if(!tgl){toast('Isi tanggal pinjam',true);return}
+  if(!nama){toast('Isi nama pelanggan',true);return}
+  const it=state.items.find(x=>x.id===itemId);
+  if(qty>(+it?.qty||0)){toast(`Qty ${qty} melebihi stok ${it?.qty}`,true);return}
+  state.bookings.push({id:uid(),itemId,tanggalPinjam:tgl,tanggalKembali:kembali,pelanggan:nama,qty,status:'AKTIF',catatan:cat,harga:+it?.harga||0});
+  saveLS();render();toast('Booking dibuat');
+}
+function selesaiBooking(id){
+  const b=state.bookings.find(x=>x.id===id);if(!b)return;
+  b.status='SELESAI';b.tanggalSelesai=today();
+  saveLS();render();toast('Peminjaman ditutup');
+}
+window.selesaiBooking=selesaiBooking;
+function hapusBooking(id){
+  if(!confirm('Hapus booking ini?'))return;
+  state.bookings=state.bookings.filter(b=>b.id!==id);
+  saveLS();render();toast('Booking dihapus');
+}
+window.hapusBooking=hapusBooking;
+
+function cekStok(){
+  const id=document.getElementById('sItem').value.trim();
+  const dari=document.getElementById('sDari').value||today();
+  const sampai=document.getElementById('sSampai').value||dari;
+  const it=state.items.find(x=>x.id===id||x.nama?.toLowerCase().includes(id.toLowerCase()));
+  if(!it){document.getElementById('stockResult').innerHTML='<div style="color:var(--warn)">Item tidak ditemukan.</div>';return}
+  const stok=+it.qty||0;
+  const bks=state.bookings.filter(b=>b.itemId===it.id&&b.status!=='SELESAI');
+  const dates=[];
+  let d=new Date(dari),end=new Date(sampai);
+  while(d<=end){dates.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1)}
+  const hasil=dates.map(dateStr=>{
+    const pinjam=bks.filter(b=>b.tanggalPinjam<=dateStr&&(!b.tanggalKembali||dateStr<=b.tanggalKembali));
+    const terpakai=pinjam.reduce((s,b)=>s+(+b.qty||0),0);
+    const sisa=stok-terpakai;
+    const ok=sisa>0;
+    return {dateStr,terpakai,sisa,ok,pelanggan:pinjam.map(b=>b.pelanggan).join(', ')};
+  });
+  document.getElementById('stockResult').innerHTML=`
+    <h4 style="margin:.2rem 0">📦 ${esc(it.nama)} — stok ${stok} • ${esc(it.kondisi||'')}</h4>
+    <table style="margin:0;background:transparent">
+      <thead><tr><th>Tanggal</th><th>Dipinjam</th><th>Sisa</th><th>Status</th><th>Pelanggan</th></tr></thead>
+      <tbody>${hasil.map(h=>`<tr><td>${esc(h.dateStr)}</td><td>${h.terpakai}</td><td>${h.sisa}</td><td><span class="pill ${h.ok?'ok':'warn'}">${h.ok?'Tersedia':'Penuh'}</span></td><td style="font-size:.8rem">${esc(h.pelanggan)||'-'}</td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+function addLabel(type,val){val=val.trim().toUpperCase();if(!val)return;if(state[type].some(x=>x.toUpperCase()===val)){toast('Sudah ada',true);return}state[type].push(val);saveLS();render()}
+window.addLabel=addLabel;
+function rmLabel(type,val){if(!confirm(`Hapus "${val}"? Item yang memakainya tidak dihapus.`))return;state[type]=state[type].filter(x=>x!==val);saveLS();render()}
+window.rmLabel=rmLabel;
+
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  ['inv','book','stock'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
+  if(name==='stock'){document.getElementById('sDari').value=today();if(!document.getElementById('sSampai').value)document.getElementById('sSampai').value=today();}
+}
+window.switchTab=switchTab;
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-foto]');
+  if(el&&el.dataset.foto){
+    document.getElementById('lbImg').src=el.dataset.foto;
+    document.getElementById('lbCap').textContent=el.dataset.nama||'';
+    document.getElementById('lightbox').classList.add('active');
+  }
+});
+document.getElementById('lightbox').addEventListener('click',e=>{if(e.target.id==='lightbox')e.target.classList.remove('active')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('lightbox').classList.remove('active')});
 
 async function init(){
-  const seed = await loadSeed();
-  if(seed.length){ state.items = seed; }
-  else { state.items = loadLS(LS_KEY, []); }
-  state.kategori = loadLS(LS_KAT, []);
-  state.kondisi  = loadLS(LS_KON, DEFAULT_KONDISI.slice());
+  const seed=await loadSeed();
+  state.items=seed.length?seed:loadLS(LS_KEY,[]);
+  state.kategori=loadLS(LS_KAT,DEFAULT_KATEGORI.slice());
+  state.kondisi=loadLS(LS_KON,DEFAULT_KONDISI.slice());
+  state.bookings=loadLS(LS_BK,[]);
 
-  // events filter
-  document.getElementById('q').addEventListener('input', e=>{ state.filter.q=e.target.value; render(); });
-  document.getElementById('fKategori').addEventListener('change', e=>{ state.filter.kat=e.target.value; render(); });
-  document.getElementById('fKondisi').addEventListener('change', e=>{ state.filter.kon=e.target.value; render(); });
+  document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+  document.getElementById('q').addEventListener('input',e=>{state.filter.q=e.target.value;render()});
+  document.getElementById('fKategori').addEventListener('change',e=>{state.filter.kat=e.target.value;render()});
+  document.getElementById('fKondisi').addEventListener('change',e=>{state.filter.kon=e.target.value;render()});
+  document.querySelectorAll('th[data-k]').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.dataset.k;if(state.sort.k===k)state.sort.dir*=-1;else{state.sort.k=k;state.sort.dir=1}
+    document.querySelectorAll('th .arr').forEach(a=>a.textContent='↕');th.querySelector('.arr').textContent=state.sort.dir===1?'↑':'↓';render();
+  }));
+  document.getElementById('btnManage').addEventListener('click',()=>document.getElementById('manageSec').classList.toggle('active'));
+  document.getElementById('addKategori').addEventListener('click',()=>{addLabel('kategori',document.getElementById('newKategori').value);document.getElementById('newKategori').value=''});
+  document.getElementById('addKondisi').addEventListener('click',()=>{addLabel('kondisi',document.getElementById('newKondisi').value);document.getElementById('newKondisi').value=''});
+  document.getElementById('newKategori').addEventListener('keydown',e=>{if(e.key==='Enter'){addLabel('kategori',e.target.value);e.target.value=''}});
+  document.getElementById('newKondisi').addEventListener('keydown',e=>{if(e.key==='Enter'){addLabel('kondisi',e.target.value);e.target.value=''}});
 
-  // sort
-  document.querySelectorAll('th[data-k]').forEach(th=>{
-    th.addEventListener('click',()=>{
-      const k = th.dataset.k;
-      if(state.sort.k===k) state.sort.dir*=-1; else { state.sort.k=k; state.sort.dir=1; }
-      document.querySelectorAll('th .arr').forEach(a=>a.textContent='↕');
-      th.querySelector('.arr').textContent = state.sort.dir===1?'↑':'↓';
-      render();
-    });
-  });
-
-  // kelola panel
-  document.getElementById('btnManage').addEventListener('click',()=>{
-    document.getElementById('manageSec').classList.toggle('active');
-    if(document.getElementById('manageSec').classList.contains('active'))
-      document.getElementById('manageSec').scrollIntoView({behavior:'smooth'});
-  });
-  document.getElementById('addKategori').addEventListener('click',()=>{
-    addLabel('kategori', document.getElementById('newKategori').value);
-    document.getElementById('newKategori').value='';
-  });
-  document.getElementById('addKondisi').addEventListener('click',()=>{
-    addLabel('kondisi', document.getElementById('newKondisi').value);
-    document.getElementById('newKondisi').value='';
-  });
-  document.getElementById('newKategori').addEventListener('keydown',e=>{ if(e.key==='Enter'){ addLabel('kategori', e.target.value); e.target.value=''; }});
-  document.getElementById('newKondisi').addEventListener('keydown',e=>{ if(e.key==='Enter'){ addLabel('kondisi', e.target.value); e.target.value=''; }});
-
-  // form item
   document.getElementById('btnAdd').addEventListener('click',()=>{
-    state.editingId = null;
-    document.getElementById('formTitle').textContent = 'Tambah Item Baru';
-    ['fNama','fId','fKategori','fFoto','fKondisiInp'].forEach(id=>document.getElementById(id).value='');
+    state.editingId=null;document.getElementById('formTitle').textContent='Tambah Item Baru';
+    ['fNama','fId','fKategoriI','fFoto','fKondisiInp','fKeterangan','fHarga'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('fQty').value='1';
-    document.getElementById('formSec').classList.add('active');
-    document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
+    document.getElementById('formSec').classList.add('active');document.getElementById('formSec').scrollIntoView({behavior:'smooth'});
   });
-  document.getElementById('btnCancelForm').addEventListener('click',()=>{
-    document.getElementById('formSec').classList.remove('active');
-  });
+  document.getElementById('btnCancelForm').addEventListener('click',()=>document.getElementById('formSec').classList.remove('active'));
   document.getElementById('btnSave').addEventListener('click',()=>{
-    const nama = document.getElementById('fNama').value.trim();
-    const id = document.getElementById('fId').value.trim() || uid();
-    const kategori = document.getElementById('fKategori').value.trim() || 'UMUM';
-    const foto = document.getElementById('fFoto').value.trim();
-    const kondisi = document.getElementById('fKondisiInp').value.trim();
-    const qty = Math.max(0, +document.getElementById('fQty').value||0);
-    if(!nama){ toast('Nama barang wajib diisi', true); return; }
-    // auto-daftar label baru
-    if(!state.kategori.some(x=>x.toUpperCase()===kategori.toUpperCase())) state.kategori.push(kategori);
-    if(kondisi && !state.kondisi.some(x=>x.toUpperCase()===kondisi.toUpperCase())) state.kondisi.push(kondisi);
-    if(state.editingId){
-      const idx = state.items.findIndex(x=>x.id===state.editingId);
-      state.items[idx] = {...state.items[idx], nama, id, kategori, foto, kondisi, qty};
-      toast('Perubahan disimpan');
-    }else{
-      state.items.push({id, nama, kategori, foto, kondisi, qty});
-      toast('Item ditambahkan');
-    }
-    saveLS(); render(); document.getElementById('formSec').classList.remove('active');
+    const nama=document.getElementById('fNama').value.trim();
+    const id=document.getElementById('fId').value.trim()||uid();
+    const kategori=document.getElementById('fKategoriI').value.trim()||'UMUM';
+    const foto=document.getElementById('fFoto').value.trim();
+    const kondisi=document.getElementById('fKondisiInp').value.trim();
+    const qty=Math.max(0,+document.getElementById('fQty').value||0);
+    const harga=+document.getElementById('fHarga').value||0;
+    const keterangan=document.getElementById('fKeterangan').value.trim();
+    if(!nama){toast('Nama wajib',true);return}
+    if(!state.kategori.some(x=>x.toUpperCase()===kategori.toUpperCase()))state.kategori.push(kategori);
+    if(kondisi&&!state.kondisi.some(x=>x.toUpperCase()===kondisi.toUpperCase()))state.kondisi.push(kondisi);
+    const rec={id,nama,kategori,foto,kondisi,qty,harga,keterangan};
+    if(state.editingId){const i=state.items.findIndex(x=>x.id===state.editingId);state.items[i]=rec;toast('Perubahan disimpan')}
+    else{state.items.push(rec);toast('Item ditambahkan')}
+    saveLS();render();document.getElementById('formSec').classList.remove('active');
   });
 
-  // import/export
   document.getElementById('btnExport').addEventListener('click',()=>{
-    const payload = {
-      _meta:{ app:'ppm1-inventaris', exported:new Date().toISOString(), kategori:state.kategori, kondisi:state.kondisi },
-      items: state.items
-    };
-    const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `ppm1-inventaris-${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-    toast('Export: items + daftar kategori/kondisi');
+    const payload={_meta:{app:'ppm1-inventaris',exported:new Date().toISOString(),kategori:state.kategori,kondisi:state.kondisi},items:state.items,bookings:state.bookings};
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+    a.download=`ppm1-${new Date().toISOString().slice(0,10)}.json`;a.click();toast('Export: items + bookings + label');
   });
-
   document.getElementById('btnImport').addEventListener('click',()=>document.getElementById('fileImport').click());
-  document.getElementById('fileImport').addEventListener('change', async e=>{
-    const f = e.target.files[0]; if(!f) return;
+  document.getElementById('fileImport').addEventListener('change',async e=>{
+    const f=e.target.files[0];if(!f)return;
     try{
-      let parsed = JSON.parse(await f.text());
-      // dukung format lama (array) & baru (objek dgn items + daftar)
-      if(Array.isArray(parsed)){
-        state.items = parsed;
-        state.kategori = loadLS(LS_KAT, state.kategori);
-        state.kondisi  = loadLS(LS_KON, state.kondisi);
-      }else{
-        state.items = parsed.items||[];
-        if(parsed.kategori) state.kategori = parsed.kategori;
-        if(parsed.kondisi)  state.kondisi = parsed.kondisi;
-      }
-      saveLS(); render(); toast('Impor berhasil: '+state.items.length+' item');
-    }catch(err){ toast('File tidak valid: '+err.message, true); }
+      let p=JSON.parse(await f.text());
+      if(Array.isArray(p)){state.items=p}
+      else{state.items=p.items||[];if(p.kategori)state.kategori=p.kategori;if(p.kondisi)state.kondisi=p.kondisi;state.bookings=p.bookings||[]}
+      saveLS();render();toast('Impor: '+state.items.length+' item, '+state.bookings.length+' booking');
+    }catch(err){toast('File tidak valid',true)}
   });
-
   document.getElementById('btnReset').addEventListener('click',async()=>{
-    if(!confirm('Kembali ke data seed? Perubahan lokal akan dihapus.')) return;
-    const seed = await loadSeed();
-    if(seed.length){ state.items = seed; saveLS(); render(); toast('Reset ke seed: '+seed.length+' item'); }
-    else toast('Seed tidak ditemukan / gagal dimuat', true);
+    if(!confirm('Reset ke seed? Perubahan lokal & booking dihapus.'))return;
+    const s=await loadSeed();if(s.length){state.items=s;state.bookings=[];saveLS();render();toast('Reset ke seed')}
   });
+  document.getElementById('btnSeedReload').addEventListener('click',async e=>{e.preventDefault();const s=await loadSeed();if(s.length){state.items=s;saveLS();render();toast('Seed dimuat ulang')}});
 
-  document.getElementById('btnSeedReload').addEventListener('click', async e=>{
-    e.preventDefault();
-    const seed = await loadSeed();
-    if(seed.length){ state.items = seed; saveLS(); render(); toast('Seed dimuat ulang'); }
-    else toast('Seed gagal dimuat', true);
-  });
+  document.getElementById('btnBook').addEventListener('click',addBooking);
+  document.getElementById('btnCek').addEventListener('click',cekStok);
 
-  saveLS();
-  render();
+  saveLS();render();
 }
 init();
 </script>
