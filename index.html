@@ -96,6 +96,7 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
   <button class="tab-btn" data-tab="book">📅 Booking</button>
   <button class="tab-btn" data-tab="stock">🔍 Cek Stok</button>
   <button class="tab-btn" data-tab="log">📋 Log & Laporan</button>
+  <button class="tab-btn" data-tab="users" id="tabBtnUsers">👥 Pengguna</button>
 </div>
 
 <div id="tab-inv">
@@ -229,6 +230,43 @@ footer{padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted)
         <div style="align-self:end"><button id="btnReport">📊 Tampilkan</button></div>
       </div>
       <div id="repResult"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-users" style="display:none">
+  <div class="panel">
+    <h3>👥 Kelola Pengguna <span id="userAdminOnly" class="pill" style="background:#1e3a5f;color:#93c5fd">admin only</span></h3>
+    <div class="body" style="padding:1rem">
+      <h4 style="margin:.3rem 0 .6rem;color:var(--muted)">Daftar pengguna</h4>
+      <table id="usersTable" style="width:100%;font-size:.85rem">
+        <thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Buat tanggal</th><th style="text-align:right">Aksi</th></tr></thead>
+        <tbody id="usersTbody"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:1rem">Memuat…</td></tr></tbody>
+      </table>
+
+      <hr style="border-color:var(--border);margin:1.2rem 0">
+      <h4 style="margin:.3rem 0 .6rem;color:var(--muted)">＋ Tambah pengguna baru</h4>
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+        <div><label>Username *</label><input id="nuUser" placeholder="mis. rina"></div>
+        <div><label>Nama *</label><input id="nuNama" placeholder="mis. Rina Sari"></div>
+        <div><label>Password *</label><input id="nuPass" type="password" placeholder="min. 6 karakter"></div>
+        <div><label>Role</label>
+          <select id="nuRole">
+            <option value="viewer">viewer — lihat saja</option>
+            <option value="editor">editor — lihat + ubah</option>
+            <option value="admin">admin — penuh</option>
+          </select>
+        </div>
+        <div style="align-self:end"><button id="nuBtn" style="width:100%">＋ Tambah Pengguna</button></div>
+      </div>
+
+      <hr style="border-color:var(--border);margin:1.2rem 0">
+      <h4 style="margin:.3rem 0 .6rem;color:var(--muted)">🔑 Ganti password</h4>
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+        <div><label>Username</label><input id="npUser" placeholder="mis. admin"></div>
+        <div><label>Password baru *</label><input id="npPass" type="password" placeholder="min. 6 karakter"></div>
+        <div style="align-self:end"><button id="npBtn" style="width:100%">Simpan Password Baru</button></div>
+      </div>
     </div>
   </div>
 </div>
@@ -403,6 +441,9 @@ function updateToolbarRole(){
   ['btnAdd','btnImport','btnManage','btnReset'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display=hide?'none':'';
   });
+  // Tab Pengguna: hanya admin yang lihat
+  const tabUsers=document.getElementById('tabBtnUsers');
+  if(tabUsers)tabUsers.style.display=canAdmin()?'':'none';
   let badge=document.getElementById('roBadge');
   if(hide){
     if(!badge){badge=document.createElement('span');badge.id='roBadge';
@@ -585,7 +626,7 @@ window.rmLabel=rmLabel;
 
 function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  ['inv','book','stock','log'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
+  ['inv','book','stock','log','users'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
   if(name==='stock'){document.getElementById('sDari').value=today();if(!document.getElementById('sSampai').value)document.getElementById('sSampai').value=today();}
   if(name==='log'){
     const d=new Date();d.setDate(d.getDate()-6);
@@ -593,8 +634,75 @@ function switchTab(name){
     if(!document.getElementById('repSampai').value)document.getElementById('repSampai').value=today();
     genReport();
   }
+  if(name==='users') renderUsers();
 }
 window.switchTab=switchTab;
+
+// ===== Tab Pengguna =====
+async function renderUsers(){
+  const tbl=document.getElementById('usersTbody');
+  if(!tbl)return;
+  tbl.innerHTML='<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:.8rem">Memuat…</td></tr>';
+  const r=await api('users',{},'GET');
+  if(!r.ok){
+    tbl.innerHTML=`<tr><td colspan="5" style="color:#fca5a5;text-align:center;padding:.8rem">${esc(r.error||'gagal memuat')}${state.role!=='admin'?' — hanya admin yang boleh':'.'}</td></tr>`;
+    return;
+  }
+  const users=(r.data||[]).map(u=>typeof u==='string'?{username:u,role:'-',nama:'-',created_at:'-'}:u);
+  if(!users.length){
+    tbl.innerHTML='<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:.8rem">Belum ada pengguna.</td></tr>';
+    return;
+  }
+  tbl.innerHTML=users.map(u=>`
+    <tr>
+      <td><strong>${esc(u.username||u.name||'')}</strong></td>
+      <td>${esc(u.nama||'-')}</td>
+      <td><span class="pill ${u.role==='admin'?'disewa':u.role==='editor'?'ok':''}">${esc(u.role||'-')}</span></td>
+      <td style="font-size:.78rem;color:var(--muted)">${esc(u.created_at||'-').slice(0,10)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="sm" data-pw="${esc(u.username)}" onclick="document.getElementById('npUser').value=this.dataset.pw">🔑</button>
+        ${u.username!=='admin'?`<button class="sm danger" onclick="delUser('${esc(u.username)}')">✕ Hapus</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+async function delUser(username){
+  if(!requireAdmin())return;
+  if(username===state.nama){toast('Tidak bisa hapus akun sendiri',true);return}
+  if(!confirm(`Hapus pengguna "${username}"?`))return;
+  const r=await api('user-delete',{username});
+  if(r.ok){log('user-del',`Hapus user "${username}"`);toast('Pengguna dihapus');renderUsers()}
+  else toast(r.error||'Gagal hapus',true);
+}
+window.delUser=delUser;
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // Tambah pengguna
+  document.getElementById('nuBtn')?.addEventListener('click',async()=>{
+    if(!requireAdmin())return;
+    const username=document.getElementById('nuUser').value.trim().toLowerCase();
+    const nama=document.getElementById('nuNama').value.trim();
+    const pass=document.getElementById('nuPass').value;
+    const role=document.getElementById('nuRole').value;
+    if(!username||!nama||!pass){toast('Username, nama & password wajib',true);return}
+    if(pass.length<6){toast('Password minimal 6 karakter',true);return}
+    const r=await api('user-add',{username,password:pass,role,nama});
+    if(r.ok){log('user-add',`Tambah user "${username}" (${role})`);toast('Pengguna ditambahkan');['nuUser','nuNama','nuPass'].forEach(id=>document.getElementById(id).value='');renderUsers()}
+    else toast(r.error||'Gagal tambah pengguna',true);
+  });
+  // Ganti password
+  document.getElementById('npBtn')?.addEventListener('click',async()=>{
+    if(!requireAdmin())return;
+    const username=document.getElementById('npUser').value.trim().toLowerCase();
+    const newPass=document.getElementById('npPass').value;
+    if(!username){toast('Isi username',true);return}
+    if(newPass.length<6){toast('Password minimal 6 karakter',true);return}
+    if(!confirm(`Ganti password untuk "${username}"?`))return;
+    const r=await api('user-pass',{username,newPass});
+    if(r.ok){log('user-pass',`Ganti password "${username}"`);toast('Password diganti');document.getElementById('npPass').value=''}
+    else toast(r.error||'Gagal ganti password',true);
+  });
+});
 
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-foto]');
